@@ -229,11 +229,12 @@ const activeDayData = computed(() => days.value.find(d => d.key === activeDay.va
 const totalNotes = computed(() => days.value.reduce((sum, d) => sum + d.notes.length, 0))
 
 // ─── API ───────────────────────────────────────────────────────────
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 const DAY_KEYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri']
 
 async function fetchWeekNotes() {
   try {
-    const res = await fetch(`/api/v1/notes?year=${selectedYear.value}&week=${selectedIsoWeek.value}`)
+    const res = await fetch(`${API_BASE}/api/v1/notes?year=${selectedYear.value}&week=${selectedIsoWeek.value}`)
     const data = await res.json()
     for (const dayKey of DAY_KEYS) {
       notesStore[noteKey(selectedYear.value, selectedWeekIndex.value, dayKey)] = data.days[dayKey] ?? []
@@ -258,7 +259,7 @@ function handleWeekChange(e: Event) {
 
 async function handleAddNote(dayKey: DayKey, content: string) {
   try {
-    const res = await fetch('/api/v1/notes', {
+    const res = await fetch(`${API_BASE}/api/v1/notes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -278,7 +279,7 @@ async function handleAddNote(dayKey: DayKey, content: string) {
 
 async function handleDeleteNote(dayKey: DayKey, noteId: string) {
   try {
-    await fetch(`/api/v1/notes/${noteId}`, { method: 'DELETE' })
+    await fetch(`${API_BASE}/api/v1/notes/${noteId}`, { method: 'DELETE' })
     const key = noteKey(selectedYear.value, selectedWeekIndex.value, dayKey)
     notesStore[key] = (notesStore[key] ?? []).filter(n => n.id !== noteId)
   } catch (e) {
