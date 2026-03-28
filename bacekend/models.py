@@ -25,3 +25,6 @@ class WeekNotesResponse(BaseModel):
     year: int
     week: int
     days: dict[str, list[NoteResponse]]
+
+class HealthResponse(BaseModel):
+    status: str
