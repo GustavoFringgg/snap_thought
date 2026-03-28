@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from database import create_indexes
 from routes.notes import router as notes_router
+from routes.health import router as health_router
 
 
 @asynccontextmanager
@@ -28,3 +29,9 @@ app.add_middleware(
 )
 
 app.include_router(notes_router)
+app.include_router(health_router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
