@@ -16,16 +16,24 @@
       </div>
     </div>
 
-    <!-- Input Area -->
-    <div class="day-card__input-section">
-      <textarea
-        v-model="inputValue"
-        class="day-card__textarea"
-        :aria-label="`輸入 ${day.label} 的學習筆記`"
-        @keydown.ctrl.enter="addNote"
-        @keydown.meta.enter="addNote"
-      ></textarea>
+    <!-- Add Note Button -->
+    <div class="day-card__add-section">
+      <button class="day-card__add-btn" @click="showAddModal = true" :aria-label="`新增 ${day.label} 筆記`">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        新增筆記
+      </button>
     </div>
+
+    <!-- Add Note Modal -->
+    <AddNoteModal
+      :show="showAddModal"
+      :dayLabel="day.label"
+      :colorVar="day.colorVar"
+      @close="showAddModal = false"
+      @submit="addNote"
+    />
 
     <!-- Notes List -->
     <div class="day-card__notes" v-if="day.notes.length > 0">
@@ -88,7 +96,8 @@
 import { ref, computed } from "vue";
 import NoteItem from "./NoteItem.vue";
 import NoteModal from "./NoteModal.vue";
-import type { DayData, Note } from "../types";
+import AddNoteModal from "./AddNoteModal.vue";
+import type { DayData, Note, NoteTag } from "../types";
 
 const props = defineProps<{
   day: DayData;
@@ -97,20 +106,17 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  "add-note": [dayKey: DayData["key"], content: string];
+  "add-note": [dayKey: DayData["key"], content: string, tag: NoteTag | null];
   "delete-note": [dayKey: DayData["key"], noteId: string];
 }>();
 
-const inputValue = ref("");
+const showAddModal = ref(false);
 const selectedNote = ref<Note | null>(null);
 
 const reversedNotes = computed(() => [...props.day.notes].reverse());
 
-function addNote() {
-  const content = inputValue.value.trim();
-  if (!content) return;
-  emit("add-note", props.day.key, content);
-  inputValue.value = "";
+function addNote(content: string, tag: NoteTag | null) {
+  emit("add-note", props.day.key, content, tag);
 }
 
 function deleteNote(id: string) {
@@ -195,48 +201,34 @@ function openModal(note: Note) {
   font-variant-numeric: tabular-nums;
 }
 
-/* Input */
-.day-card__input-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 16px 20px;
+/* Add Button */
+.day-card__add-section {
+  flex-shrink: 0;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--color-border);
-  min-height: 0;
 }
 
-.day-card__textarea {
-  flex: 1;
+.day-card__add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   width: 100%;
-  min-height: 80px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--color-border);
+  padding: 8px 14px;
+  border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface-2);
-  font-family: var(--font-mono);
-  font-size: 13.5px;
-  line-height: 1.7;
-  color: var(--color-text);
-  resize: none;
-  transition:
-    border-color var(--transition),
-    background var(--transition),
-    box-shadow var(--transition);
-  appearance: none;
-}
-
-.day-card__textarea::placeholder {
+  background: transparent;
   color: var(--color-text-muted);
   font-family: var(--font-sans);
   font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
 }
 
-.day-card__textarea:focus {
-  outline: none;
+.day-card__add-btn:hover {
   border-color: var(--day-color, var(--color-primary));
-  background: var(--color-surface);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--day-color, var(--color-primary)) 12%, transparent);
+  color: var(--day-color, var(--color-primary));
+  background: color-mix(in srgb, var(--day-color, var(--color-primary)) 6%, transparent);
 }
 
 /* Notes */
@@ -246,8 +238,8 @@ function openModal(note: Note) {
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  height: 240px;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
 }
 
 .day-card__notes-header {
@@ -302,6 +294,10 @@ function openModal(note: Note) {
 
   .day-card__input-section {
     padding: 14px 16px;
+  }
+
+  .day-card {
+    flex: 1;
   }
 
   .day-card__notes {

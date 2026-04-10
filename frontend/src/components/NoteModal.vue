@@ -88,8 +88,9 @@ function handleDelete() {
   border-radius: var(--radius-xl);
   box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10);
   width: 100%;
-  max-width: 860px;
-  max-height: 85dvh;
+  max-width: 1080px;
+  height: 700px;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;

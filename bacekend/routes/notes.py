@@ -16,6 +16,7 @@ def doc_to_response(doc: dict) -> NoteResponse:
         content=doc["content"],
         createdAt=doc["createdAt"],
         updatedAt=doc.get("updatedAt"),
+        tag=doc.get("tag"),
     )
 
 
@@ -46,6 +47,7 @@ async def create_note(body: NoteCreate):
         "isoWeek": body.week,
         "dayKey": body.dayKey,
         "content": body.content,
+        "tag": body.tag,
         "createdAt": now,
         "updatedAt": now,
     }

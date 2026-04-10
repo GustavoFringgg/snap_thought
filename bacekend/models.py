@@ -8,6 +8,7 @@ class NoteCreate(BaseModel):
     week: int
     dayKey: str
     content: str
+    tag: Optional[str] = None
 
 
 class NoteUpdate(BaseModel):
@@ -19,6 +20,7 @@ class NoteResponse(BaseModel):
     content: str
     createdAt: str
     updatedAt: Optional[str] = None
+    tag: Optional[str] = None
 
 
 class WeekNotesResponse(BaseModel):

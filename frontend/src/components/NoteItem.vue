@@ -2,14 +2,21 @@
   <div class="note-item" :style="`--day-color: var(${colorVar})`">
     <div class="note-item__bar"></div>
     <div class="note-item__body">
-      <p
-        class="note-item__content"
-        :class="{ 'note-item__content--truncated': isLong }"
-        @click="isLong ? $emit('expand', note) : undefined"
-        :style="isLong ? 'cursor: pointer' : ''"
-      >
-        {{ displayContent }}
-      </p>
+      <div class="note-item__main">
+        <p
+          class="note-item__content"
+          :class="{ 'note-item__content--truncated': isLong }"
+          @click="isLong ? $emit('expand', note) : undefined"
+          :style="isLong ? 'cursor: pointer' : ''"
+        >
+          {{ displayContent }}
+        </p>
+        <span
+          v-if="note.tag"
+          class="note-item__tag"
+          :style="`background:${TAG_COLORS[note.tag].bg};color:${TAG_COLORS[note.tag].text};border-color:${TAG_COLORS[note.tag].border}`"
+        >{{ note.tag }}</span>
+      </div>
       <div class="note-item__footer">
         <span class="note-item__time">{{ formattedTime }}</span>
         <div class="note-item__actions">
@@ -66,6 +73,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { Note } from "../types";
+import { TAG_COLORS } from "../types";
 
 const TRUNCATE_LIMIT = 10;
 
@@ -124,6 +132,26 @@ const formattedTime = computed(() => {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+}
+
+.note-item__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.note-item__tag {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  letter-spacing: 0.2px;
 }
 
 .note-item__content {
