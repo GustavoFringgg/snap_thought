@@ -7,33 +7,22 @@
           :style="`--day-color: var(${colorVar})`"
           role="dialog"
           aria-modal="true"
-          :aria-label="`新增 ${dayLabel} 筆記`"
+          :aria-label="`編輯 ${dayLabel} 筆記`"
         >
           <!-- Header -->
           <div class="modal__header">
             <div class="modal__title-row">
               <span class="modal__day-dot"></span>
               <span class="modal__day-label">{{ dayLabel }}</span>
-              <span class="modal__hint">Ctrl + Enter 送出</span>
+              <span class="modal__hint">編輯筆記　Ctrl + Enter 儲存</span>
             </div>
             <button
               class="modal__close"
               aria-label="關閉"
               @click="$emit('close')"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M3 3l10 10M13 3L3 13"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
             </button>
           </div>
@@ -71,15 +60,13 @@
 
           <!-- Footer -->
           <div class="modal__footer">
-            <button class="modal__cancel-btn" @click="$emit('close')">
-              取消
-            </button>
+            <button class="modal__cancel-btn" @click="$emit('close')">取消</button>
             <button
               class="modal__submit-btn"
               :disabled="!inputValue.trim()"
               @click="submit"
             >
-              新增筆記
+              儲存變更
             </button>
           </div>
         </div>
@@ -91,10 +78,11 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from "vue";
 import { NOTE_TAGS, TAG_COLORS } from "../types";
-import type { NoteTag } from "../types";
+import type { Note, NoteTag } from "../types";
 
 const props = defineProps<{
   show: boolean;
+  note: Note | null;
   dayLabel: string;
   colorVar: string;
 }>();
@@ -111,9 +99,9 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null);
 watch(
   () => props.show,
   async (val) => {
-    if (val) {
-      inputValue.value = "";
-      selectedTags.value = [];
+    if (val && props.note) {
+      inputValue.value = props.note.content;
+      selectedTags.value = props.note.tags ? [...props.note.tags] : [];
       await nextTick();
       textareaRef.value?.focus();
     }
@@ -162,7 +150,7 @@ function submit() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1.5px solid var(--color-border);
+  border: 1.5px solid var(--day-color, var(--color-border));
 }
 
 .modal__header {
@@ -190,7 +178,7 @@ function submit() {
 
 .modal__day-label {
   font-size: 15px;
-  font-weight: 700px;
+  font-weight: 700;
   color: var(--color-text);
 }
 
@@ -363,9 +351,7 @@ function submit() {
 }
 .modal-enter-active .modal,
 .modal-leave-active .modal {
-  transition:
-    transform 200ms ease,
-    opacity 200ms ease;
+  transition: transform 200ms ease, opacity 200ms ease;
 }
 .modal-enter-from,
 .modal-leave-to {

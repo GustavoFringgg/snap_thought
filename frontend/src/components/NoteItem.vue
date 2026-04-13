@@ -11,14 +11,42 @@
         >
           {{ displayContent }}
         </p>
-        <span
-          v-if="note.tag"
-          class="note-item__tag"
-          :style="`background:${TAG_COLORS[note.tag].bg};color:${TAG_COLORS[note.tag].text};border-color:${TAG_COLORS[note.tag].border}`"
-        >{{ note.tag }}</span>
+        <span v-if="note.tags && note.tags.length" class="note-item__tags">
+          <span
+            v-for="tag in note.tags"
+            :key="tag"
+            class="note-item__tag"
+            :style="`background:${TAG_COLORS[tag].bg};color:${TAG_COLORS[tag].text};border-color:${TAG_COLORS[tag].border}`"
+            >{{ tag }}</span
+          >
+        </span>
       </div>
       <div class="note-item__footer">
-        <span class="note-item__time">{{ formattedTime }}</span>
+        <div class="note-item__footer-left">
+          <span class="note-item__time">{{ formattedTime }}</span>
+          <button
+            class="note-item__edit"
+            aria-label="編輯這則筆記"
+            @click="$emit('edit', note)"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M8.5 1.5a1.414 1.414 0 0 1 2 2L3 11H1v-2L8.5 1.5z"
+                stroke="currentColor"
+                stroke-width="1.3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            編輯
+          </button>
+        </div>
         <div class="note-item__actions">
           <button
             v-if="isLong"
@@ -75,7 +103,7 @@ import { computed } from "vue";
 import type { Note } from "../types";
 import { TAG_COLORS } from "../types";
 
-const TRUNCATE_LIMIT = 10;
+const TRUNCATE_LIMIT = 20;
 
 const props = defineProps<{
   note: Note;
@@ -85,6 +113,7 @@ const props = defineProps<{
 defineEmits<{
   delete: [id: string];
   expand: [note: Note];
+  edit: [note: Note];
 }>();
 
 const isLong = computed(() => props.note.content.length > TRUNCATE_LIMIT);
@@ -142,9 +171,14 @@ const formattedTime = computed(() => {
   min-width: 0;
 }
 
+.note-item__tags {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
 .note-item__tag {
   display: inline-block;
-  flex-shrink: 0;
   padding: 1px 8px;
   border-radius: 20px;
   border: 1px solid;
@@ -173,10 +207,43 @@ const formattedTime = computed(() => {
   justify-content: space-between;
 }
 
+.note-item__footer-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .note-item__time {
   font-size: 11px;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.note-item__edit {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.note-item__edit:hover {
+  border-color: var(--day-color, var(--color-primary));
+  color: var(--day-color, var(--color-primary));
+  background: color-mix(
+    in srgb,
+    var(--day-color, var(--color-primary)) 6%,
+    transparent
+  );
 }
 
 .note-item__actions {

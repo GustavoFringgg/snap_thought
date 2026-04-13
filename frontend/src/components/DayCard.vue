@@ -35,6 +35,16 @@
       @submit="addNote"
     />
 
+    <!-- Edit Note Modal -->
+    <EditNoteModal
+      :show="showEditModal"
+      :note="editingNote"
+      :dayLabel="day.label"
+      :colorVar="day.colorVar"
+      @close="closeEditModal"
+      @submit="updateNote"
+    />
+
     <!-- Notes List -->
     <div class="day-card__notes" v-if="day.notes.length > 0">
       <div class="day-card__notes-header">
@@ -48,6 +58,7 @@
           :colorVar="day.colorVar"
           @delete="deleteNote"
           @expand="openModal"
+          @edit="openEditModal"
         />
       </div>
     </div>
@@ -97,6 +108,7 @@ import { ref, computed } from "vue";
 import NoteItem from "./NoteItem.vue";
 import NoteModal from "./NoteModal.vue";
 import AddNoteModal from "./AddNoteModal.vue";
+import EditNoteModal from "./EditNoteModal.vue";
 import type { DayData, Note, NoteTag } from "../types";
 
 const props = defineProps<{
@@ -106,17 +118,20 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  "add-note": [dayKey: DayData["key"], content: string, tag: NoteTag | null];
+  "add-note": [dayKey: DayData["key"], content: string, tags: NoteTag[]];
   "delete-note": [dayKey: DayData["key"], noteId: string];
+  "update-note": [dayKey: DayData["key"], noteId: string, content: string, tags: NoteTag[]];
 }>();
 
 const showAddModal = ref(false);
 const selectedNote = ref<Note | null>(null);
+const showEditModal = ref(false);
+const editingNote = ref<Note | null>(null);
 
 const reversedNotes = computed(() => [...props.day.notes].reverse());
 
-function addNote(content: string, tag: NoteTag | null) {
-  emit("add-note", props.day.key, content, tag);
+function addNote(content: string, tags: NoteTag[]) {
+  emit("add-note", props.day.key, content, tags);
 }
 
 function deleteNote(id: string) {
@@ -125,6 +140,21 @@ function deleteNote(id: string) {
 
 function openModal(note: Note) {
   selectedNote.value = note;
+}
+
+function openEditModal(note: Note) {
+  editingNote.value = note;
+  showEditModal.value = true;
+}
+
+function closeEditModal() {
+  showEditModal.value = false;
+  editingNote.value = null;
+}
+
+function updateNote(content: string, tags: NoteTag[]) {
+  if (!editingNote.value) return;
+  emit("update-note", props.day.key, editingNote.value.id, content, tags);
 }
 </script>
 

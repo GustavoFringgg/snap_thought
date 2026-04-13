@@ -3,7 +3,8 @@ from bson import ObjectId
 from datetime import datetime, timezone
 
 from database import notes_collection
-from models import NoteCreate, NoteUpdate, NoteResponse, WeekNotesResponse
+from models import NoteCreate, NoteUpdate, NoteResponse, WeekNotesResponse, NoteWithContext, TagNotesResponse
+from typing import Optional
 
 router = APIRouter(prefix="/api/v1/notes", tags=["notes"])
 
@@ -16,7 +17,7 @@ def doc_to_response(doc: dict) -> NoteResponse:
         content=doc["content"],
         createdAt=doc["createdAt"],
         updatedAt=doc.get("updatedAt"),
-        tag=doc.get("tag"),
+        tags=doc.get("tags"),
     )
 
 
@@ -47,7 +48,7 @@ async def create_note(body: NoteCreate):
         "isoWeek": body.week,
         "dayKey": body.dayKey,
         "content": body.content,
-        "tag": body.tag,
+        "tags": body.tags,
         "createdAt": now,
         "updatedAt": now,
     }
@@ -55,6 +56,33 @@ async def create_note(body: NoteCreate):
     result = await notes_collection.insert_one(doc)
     doc["_id"] = result.inserted_id
     return doc_to_response(doc)
+
+
+@router.get("/by-tag", response_model=TagNotesResponse)
+async def get_notes_by_tag(tag: Optional[str] = Query(None)):
+    if tag:
+        query = {"tags": tag}
+    else:
+        query = {"tags": {"$exists": True, "$ne": None}}
+
+    cursor = notes_collection.find(query).sort("createdAt", -1)
+    notes = []
+    async for doc in cursor:
+        tags = doc.get("tags")
+        if not tags:
+            continue
+        notes.append(NoteWithContext(
+            id=str(doc["_id"]),
+            content=doc["content"],
+            createdAt=doc["createdAt"],
+            updatedAt=doc.get("updatedAt"),
+            tags=tags,
+            year=doc["year"],
+            isoWeek=doc["isoWeek"],
+            dayKey=doc["dayKey"],
+        ))
+
+    return TagNotesResponse(total=len(notes), notes=notes)
 
 
 @router.delete("/{note_id}", status_code=204)
@@ -73,9 +101,16 @@ async def update_note(note_id: str, body: NoteUpdate):
         raise HTTPException(status_code=400, detail="Invalid note_id")
 
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    fields: dict = {"updatedAt": now}
+    if body.content is not None:
+        fields["content"] = body.content
+    if body.tags is not None:
+        fields["tags"] = body.tags if body.tags else None
+
     result = await notes_collection.find_one_and_update(
         {"_id": ObjectId(note_id)},
-        {"$set": {"content": body.content, "updatedAt": now}},
+        {"$set": fields},
         return_document=True,
     )
 

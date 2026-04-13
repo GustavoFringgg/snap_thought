@@ -3,10 +3,15 @@
     <AppNavbar
       :days="days"
       :active-day="activeDay"
+      :current-view="currentView"
       @change-day="handleChangeDay"
+      @change-view="currentView = $event"
     />
 
-    <main class="main">
+    <!-- Tag browse page -->
+    <TagBrowsePage v-if="currentView === 'tags'" />
+
+    <main v-else class="main">
       <div class="main__inner">
         <!-- Page header -->
         <div class="page-header">
@@ -117,6 +122,7 @@
             :is-active="activeDay === day.key"
             @add-note="handleAddNote"
             @delete-note="handleDeleteNote"
+            @update-note="handleUpdateNote"
           />
         </div>
 
@@ -151,6 +157,7 @@
             :is-active="true"
             @add-note="handleAddNote"
             @delete-note="handleDeleteNote"
+            @update-note="handleUpdateNote"
           />
         </div>
       </div>
@@ -165,6 +172,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch, onMounted } from "vue";
 import AppNavbar from "./components/AppNavbar.vue";
+import TagBrowsePage from "./components/TagBrowsePage.vue";
 import DayCard from "./components/DayCard.vue";
 import type { DayData, DayKey, Note, NoteTag } from "./types";
 
@@ -321,6 +329,7 @@ const todayKey = computed<DayKey | null>(() => {
 });
 
 const activeDay = ref<DayKey>(todayKey.value ?? "mon");
+const currentView = ref<'week' | 'tags'>('week');
 const activeDayData = computed(() =>
   days.value.find((d) => d.key === activeDay.value),
 );
@@ -422,7 +431,7 @@ function goToNextWeek() {
   }
 }
 
-async function handleAddNote(dayKey: DayKey, content: string, tag: NoteTag | null) {
+async function handleAddNote(dayKey: DayKey, content: string, tags: NoteTag[]) {
   try {
     const res = await fetch(`${API_BASE}/api/v1/notes`, {
       method: "POST",
@@ -432,11 +441,11 @@ async function handleAddNote(dayKey: DayKey, content: string, tag: NoteTag | nul
         week: selectedIsoWeek.value,
         dayKey,
         content,
-        tag: tag ?? undefined,
+        tags: tags.length ? tags : undefined,
       }),
     });
     const noteFromServer: Note = await res.json();
-    const note: Note = { ...noteFromServer, tag: tag ?? undefined };
+    const note: Note = { ...noteFromServer, tags: tags.length ? tags : undefined };
     const key = noteKey(selectedYear.value, selectedWeekIndex.value, dayKey);
     notesStore[key] = [...(notesStore[key] ?? []), note];
   } catch (e) {
@@ -451,6 +460,22 @@ async function handleDeleteNote(dayKey: DayKey, noteId: string) {
     notesStore[key] = (notesStore[key] ?? []).filter((n) => n.id !== noteId);
   } catch (e) {
     console.error("Failed to delete note:", e);
+  }
+}
+
+async function handleUpdateNote(dayKey: DayKey, noteId: string, content: string, tags: NoteTag[]) {
+  try {
+    await fetch(`${API_BASE}/api/v1/notes/${noteId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, tags: tags.length ? tags : undefined }),
+    });
+    const key = noteKey(selectedYear.value, selectedWeekIndex.value, dayKey);
+    notesStore[key] = (notesStore[key] ?? []).map((n) =>
+      n.id === noteId ? { ...n, content, tags: tags.length ? tags : undefined } : n,
+    );
+  } catch (e) {
+    console.error("Failed to update note:", e);
   }
 }
 
