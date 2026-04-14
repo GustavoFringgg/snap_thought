@@ -62,10 +62,6 @@ export interface Note {
   content: string;
   createdAt: string;
   tags?: NoteTag[];
-  id: string;
-  content: string;
-  createdAt: string;
-  tags?: NoteTag[];
 }
 
 export interface DayData {
@@ -74,20 +70,11 @@ export interface DayData {
   shortLabel: string;
   colorVar: string;
   notes: Note[];
-  key: "mon" | "tue" | "wed" | "thu" | "fri";
-  label: string;
-  shortLabel: string;
-  colorVar: string;
-  notes: Note[];
 }
 
 export type DayKey = DayData["key"];
-export type DayKey = DayData["key"];
 
 export interface NoteWithContext extends Note {
-  year: number;
-  isoWeek: number;
-  dayKey: DayKey;
   year: number;
   isoWeek: number;
   dayKey: DayKey;
