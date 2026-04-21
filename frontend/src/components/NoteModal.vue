@@ -300,7 +300,7 @@ function handleDelete() {
   padding: 12px 0;
   font-size: 13px;
   color: #e4e9ff;
-  line-height: 0.8;
+  line-height: 1;
 }
 
 
