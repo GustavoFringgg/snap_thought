@@ -57,11 +57,11 @@ import DOMPurify from 'dompurify'
 const highlightExt: TokenizerAndRendererExtension = {
   name: 'highlight',
   level: 'inline',
-  start: (src) => src.indexOf('='),
+  start: (src) => src.indexOf('=='),
   tokenizer(src) {
-    const red = src.match(/^==([^=]+)==/)
+    const red = src.match(/^===([\s\S]+?)===/)
     if (red) return { type: 'highlight', raw: red[0], text: red[1], color: 'red' }
-    const yellow = src.match(/^=([^=]+)=/)
+    const yellow = src.match(/^==([\s\S]+?)==/)
     if (yellow) return { type: 'highlight', raw: yellow[0], text: yellow[1], color: 'yellow' }
   },
   renderer(token) {
@@ -75,11 +75,8 @@ function escapeHtml(str: string) {
 
 const renderer = {
   code({ text, lang }: { text: string; lang?: string }) {
-    const lines = text.split('\n').map((line, i) =>
-      `<span class="code-line"><span class="line-number">${i + 1}</span><span class="line-content">${escapeHtml(line)}</span></span>`
-    ).join('\n')
     const langLabel = lang ? `<span class="code-lang">${lang}</span>` : ''
-    return `<pre>${langLabel}<code>${lines}</code></pre>`
+    return `<pre>${langLabel}<code>${escapeHtml(text)}</code></pre>`
   }
 }
 
@@ -306,27 +303,6 @@ function handleDelete() {
   line-height: 0.8;
 }
 
-.modal__content :deep(.code-line) {
-  display: flex;
-  min-height: 0.8em;
-}
-
-.modal__content :deep(.line-number) {
-  user-select: none;
-  min-width: 42px;
-  padding: 0 16px 0 12px;
-  text-align: right;
-  color: #3b4261;
-  flex-shrink: 0;
-  border-right: 1px solid #2f3354;
-  margin-right: 14px;
-}
-
-.modal__content :deep(.line-content) {
-  flex: 1;
-  padding-right: 16px;
-  white-space: pre;
-}
 
 .modal__content :deep(blockquote) {
   border-left: 3px solid var(--day-color, var(--color-primary));
