@@ -14,7 +14,8 @@ export type NoteTag =
   | "後端框架"
   | "Others"
   | "演算法"
-  | "資料結構";
+  | "資料結構"
+  | "Claude筆記";
 
 export const NOTE_TAGS: NoteTag[] = [
   "JS",
@@ -33,6 +34,7 @@ export const NOTE_TAGS: NoteTag[] = [
   "Others",
   "演算法",
   "資料結構",
+  "Claude筆記",
 ];
 
 export const TAG_COLORS: Record<
@@ -55,6 +57,7 @@ export const TAG_COLORS: Record<
   後端框架: { bg: "#ECFCCB", text: "#365314", border: "#84CC16" },
   演算法: { bg: "#f3dbce", text: "#ce9634", border: "#eec78e" },
   資料結構: { bg: "#eded52", text: "#788ecf", border: "#0e5618" },
+  Claude筆記: { bg: "#FFF0E6", text: "#C4500A", border: "#F97316" },
 };
 
 export interface Note {

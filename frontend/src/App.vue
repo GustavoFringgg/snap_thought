@@ -196,8 +196,22 @@ function generateWeeks(year: number): WeekRange[] {
 }
 
 function findCurrentWeekIndex(weekList: WeekRange[]): number {
-  const week = weekList.find((w) => w.isCurrentWeek);
-  return week ? week.index : (weekList[weekList.length - 1]?.index ?? 0);
+  const direct = weekList.find((w) => w.isCurrentWeek);
+  if (direct) return direct.index;
+
+  // 六日：往回找最近的上一週（週五所在週）
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dow = today.getDay() // 0=Sun, 6=Sat
+  if (dow === 0 || dow === 6) {
+    const daysBack = dow === 6 ? 1 : 2 // 六往回1天到週五，日往回2天
+    const lastFriday = new Date(today)
+    lastFriday.setDate(today.getDate() - daysBack)
+    const prev = weekList.find((w) => lastFriday >= w.monday && lastFriday <= w.friday)
+    if (prev) return prev.index
+  }
+
+  return weekList[weekList.length - 1]?.index ?? 0
 }
 
 // ─── ISO week helper ───────────────────────────────────────────────
