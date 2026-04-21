@@ -386,4 +386,28 @@ function submit() {
   transform: translateY(8px) scale(0.97);
   opacity: 0;
 }
+
+@media (max-width: 1025px) {
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal {
+    height: 98dvh;
+    max-height: 98dvh;
+  }
+
+  .modal__body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal__textarea {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+}
 </style>
