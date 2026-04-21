@@ -1,0 +1,10 @@
+{
+  "name": "SnapThought",
+  "short_name": "SnapThought",
+  "description": "工作週學習筆記工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait"
+}
