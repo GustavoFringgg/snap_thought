@@ -4,20 +4,6 @@
     <!-- Page header -->
     <div class="tag-page__header">
       <div class="tag-page__header-inner">
-        <div class="tag-page__header-left">
-          <h1 class="tag-page__title">標籤瀏覽</h1>
-          <p class="tag-page__subtitle">依標籤快速找到你的學習筆記</p>
-        </div>
-        <div class="tag-page__header-stats" v-if="!loading">
-          <div class="stat-pill">
-            <span class="stat-pill__num">{{ allNotes.length }}</span>
-            <span class="stat-pill__label">則有標籤的筆記</span>
-          </div>
-          <div class="stat-pill stat-pill--secondary">
-            <span class="stat-pill__num">{{ tagStats.length }}</span>
-            <span class="stat-pill__label">個標籤</span>
-          </div>
-        </div>
       </div>
 
       <!-- Tag filter chips -->
@@ -80,18 +66,6 @@
 
       <!-- Results -->
       <template v-else>
-        <div class="tag-page__result-bar">
-          <span class="tag-page__result-count">
-            顯示 <strong>{{ filteredNotes.length }}</strong> 則筆記
-            <template v-if="selectedTag">
-              · 篩選：<span class="tag-page__result-tag"
-                :style="`background:${TAG_COLORS[selectedTag].bg};color:${TAG_COLORS[selectedTag].text};border-color:${TAG_COLORS[selectedTag].border}`"
-              >{{ selectedTag }}</span>
-            </template>
-          </span>
-          <button v-if="selectedTag" class="tag-page__clear-btn" @click="selectedTag = null">清除篩選</button>
-        </div>
-
         <!-- Grouped notes -->
         <div
           v-for="group in groupedNotes"
@@ -122,11 +96,6 @@
               <div class="browse-card__bar"></div>
               <div class="browse-card__body">
                 <div class="browse-card__meta">
-                  <span class="browse-card__day-badge"
-                    :style="`background:${DAY_COLORS[note.dayKey]}18;color:${DAY_COLORS[note.dayKey]};border-color:${DAY_COLORS[note.dayKey]}30`"
-                  >{{ DAY_INFO[note.dayKey].label }}</span>
-                  <span class="browse-card__date">{{ formatDate(note.createdAt) }}</span>
-                  <span class="browse-card__spacer"></span>
                   <span v-if="note.tags && note.tags.length" class="browse-card__tags">
                     <span
                       v-for="tag in note.tags"
@@ -298,6 +267,7 @@ async function handleDelete(id: string) {
     console.error('Failed to delete note:', e)
   }
 }
+
 </script>
 
 <style scoped>
@@ -313,15 +283,13 @@ async function handleDelete(id: string) {
   flex-shrink: 0;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: 24px 28px 0;
+  padding: 12px 28px 0;
+  display: flex;
+  align-items: center;
 }
 
 .tag-page__header-inner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
+  display: none;
 }
 
 .tag-page__title {
@@ -385,6 +353,7 @@ async function handleDelete(id: string) {
   scrollbar-width: none;
   margin: 0 -28px;
   padding: 0 28px;
+  flex: 1;
 }
 
 .tag-page__filter-wrap::-webkit-scrollbar {
@@ -394,7 +363,7 @@ async function handleDelete(id: string) {
 .tag-page__filter {
   display: flex;
   gap: 6px;
-  padding-bottom: 16px;
+  padding: 8px 0;
   width: max-content;
 }
 
@@ -717,12 +686,13 @@ async function handleDelete(id: string) {
 /* ── Responsive ── */
 @media (max-width: 1025px) {
   .tag-page__header {
-    padding: 20px 16px 0;
+    padding: 8px 16px 0;
   }
 
   .tag-page__filter-wrap {
     margin: 0 -16px;
     padding: 0 16px;
+    flex: 1;
   }
 
   .tag-page__content {

@@ -9,6 +9,14 @@
               <span class="modal__day-dot"></span>
               <span class="modal__day-label">{{ dayLabel }}</span>
               <span class="modal__time">{{ formattedTime }}</span>
+              <span v-if="note.tags && note.tags.length" class="modal__tags">
+                <span
+                  v-for="tag in note.tags"
+                  :key="tag"
+                  class="modal__tag"
+                  :style="`background:${TAG_COLORS[tag].bg};color:${TAG_COLORS[tag].text};border-color:${TAG_COLORS[tag].border}`"
+                >{{ tag }}</span>
+              </span>
             </div>
             <button class="modal__close" aria-label="關閉" @click="$emit('close')">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -72,6 +80,7 @@ const renderer = {
 }
 
 marked.use({ breaks: true, extensions: [highlightExt], renderer })
+import { TAG_COLORS } from '../types'
 import type { Note } from '../types'
 
 const props = defineProps<{
@@ -172,6 +181,23 @@ function handleDelete() {
   font-size: 12px;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.modal__tags {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.modal__tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  letter-spacing: 0.2px;
 }
 
 .modal__close {

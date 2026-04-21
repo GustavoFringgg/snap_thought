@@ -31,14 +31,7 @@
         </button>
       </nav>
 
-      <!-- Tag view title -->
-      <div v-else class="navbar__view-title">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M2 2h5.5l6.5 6.5-5.5 5.5L2 7.5V2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          <circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>
-        </svg>
-        標籤瀏覽
-      </div>
+      <div v-else class="navbar__view-title"></div>
 
       <div class="navbar__meta">
         <!-- View toggle -->
