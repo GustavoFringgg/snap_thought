@@ -116,12 +116,29 @@ defineEmits<{
   edit: [note: Note];
 }>();
 
-const isLong = computed(() => props.note.content.length > TRUNCATE_LIMIT);
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, '[code]')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .replace(/^\s*>\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\n+/g, ' ')
+    .trim()
+}
+
+const plainContent = computed(() => stripMarkdown(props.note.content))
+const isLong = computed(() => plainContent.value.length > TRUNCATE_LIMIT);
 
 const displayContent = computed(() =>
   isLong.value
-    ? props.note.content.slice(0, TRUNCATE_LIMIT) + "..."
-    : props.note.content,
+    ? plainContent.value.slice(0, TRUNCATE_LIMIT) + "..."
+    : plainContent.value,
 );
 
 const formattedTime = computed(() => {
@@ -193,8 +210,7 @@ const formattedTime = computed(() => {
   line-height: 1.6;
   color: var(--color-text);
   word-break: break-word;
-  white-space: pre-wrap;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
 }
 
 .note-item__content--truncated:hover {

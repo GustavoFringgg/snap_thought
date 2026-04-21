@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="note" class="modal-backdrop" @click.self="$emit('close')">
+      <div v-if="note" class="modal-backdrop">
         <div class="modal" :style="`--day-color: var(${colorVar})`" role="dialog" aria-modal="true" :aria-label="`${dayLabel} 筆記詳情`">
           <!-- Header -->
           <div class="modal__header">
@@ -19,7 +19,7 @@
 
           <!-- Body -->
           <div class="modal__body">
-            <p class="modal__content">{{ note.content }}</p>
+            <div class="modal__content markdown-body" v-html="renderedContent"></div>
           </div>
 
           <!-- Footer -->
@@ -42,7 +42,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
+import { marked, type TokenizerAndRendererExtension } from 'marked'
+import DOMPurify from 'dompurify'
+
+const highlightExt: TokenizerAndRendererExtension = {
+  name: 'highlight',
+  level: 'inline',
+  start: (src) => src.indexOf('='),
+  tokenizer(src) {
+    const red = src.match(/^==([^=]+)==/)
+    if (red) return { type: 'highlight', raw: red[0], text: red[1], color: 'red' }
+    const yellow = src.match(/^=([^=]+)=/)
+    if (yellow) return { type: 'highlight', raw: yellow[0], text: yellow[1], color: 'yellow' }
+  },
+  renderer(token) {
+    return `<mark class="mark--${token.color}">${token.text}</mark>`
+  },
+}
+
+const renderer = {
+  code({ text, lang }: { text: string; lang?: string }) {
+    const lines = text.split('\n').map((line, i) =>
+      `<span class="code-line"><span class="line-number">${i + 1}</span><span class="line-content">${line}</span></span>`
+    ).join('\n')
+    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : ''
+    return `<pre>${langLabel}<code>${lines}</code></pre>`
+  }
+}
+
+marked.use({ breaks: true, extensions: [highlightExt], renderer })
 import type { Note } from '../types'
 
 const props = defineProps<{
@@ -55,6 +84,18 @@ const emit = defineEmits<{
   close: []
   delete: [id: string]
 }>()
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.note) emit('close')
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+
+const renderedContent = computed(() => {
+  if (!props.note) return ''
+  return DOMPurify.sanitize(marked(props.note.content) as string)
+})
 
 const formattedTime = computed(() => {
   if (!props.note) return ''
@@ -94,7 +135,7 @@ function handleDelete() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1.5px solid var(--color-border);
+  border: 0.8px solid var(--color-border);
 }
 
 /* Header */
@@ -161,12 +202,135 @@ function handleDelete() {
 }
 
 .modal__content {
-  font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.85;
   color: var(--color-text);
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.modal__content :deep(h1),
+.modal__content :deep(h2),
+.modal__content :deep(h3),
+.modal__content :deep(h4) {
+  font-weight: 700;
+  margin: 1em 0 0.4em;
+  line-height: 1.3;
+}
+
+.modal__content :deep(h1) { font-size: 0.8em; }
+.modal__content :deep(h2) { font-size: 0.85em; }
+.modal__content :deep(h3) { font-size: 1.1em; }
+
+.modal__content :deep(p) {
+  margin: 0 0 0.75em;
+}
+
+.modal__content :deep(ul),
+.modal__content :deep(ol) {
+  padding-left: 0.8em;
+  margin: 0 0 0.75em;
+}
+
+.modal__content :deep(li) {
+  margin-bottom: 0.25em;
+}
+
+.modal__content :deep(code) {
+  font-family: 'Consolas', 'Menlo', 'Monaco', var(--font-mono);
+  font-size: 0.88em;
+  background: #1e2030;
+  color: #e4e9ff;
+  border: 1px solid #2f3354;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+}
+
+.modal__content :deep(pre) {
+  background: #1e2030;
+  border: 1px solid #2f3354;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: 0 0 0.75em;
+  position: relative;
+  padding: 0;
+}
+
+.modal__content :deep(.code-lang) {
+  display: block;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-family: 'Consolas', 'Menlo', var(--font-mono);
+  color: #636d8f;
+  border-bottom: 1px solid #2f3354;
+  background: #191b2a;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.modal__content :deep(pre code) {
+  display: block;
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 13px;
+  color: #e4e9ff;
+  line-height: 0.8;
+}
+
+.modal__content :deep(.code-line) {
+  display: flex;
+  min-height: 0.8em;
+}
+
+.modal__content :deep(.line-number) {
+  user-select: none;
+  min-width: 42px;
+  padding: 0 16px 0 12px;
+  text-align: right;
+  color: #3b4261;
+  flex-shrink: 0;
+  border-right: 1px solid #2f3354;
+  margin-right: 14px;
+}
+
+.modal__content :deep(.line-content) {
+  flex: 1;
+  padding-right: 16px;
+  white-space: pre;
+}
+
+.modal__content :deep(blockquote) {
+  border-left: 3px solid var(--day-color, var(--color-primary));
+  margin: 0 0 0.75em;
+  padding: 4px 0 4px 14px;
+  color: var(--color-text-muted);
+}
+
+.modal__content :deep(strong) { font-weight: 700; }
+.modal__content :deep(em) { font-style: italic; }
+
+.modal__content :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1em 0;
+}
+
+.modal__content :deep(a) {
+  color: var(--day-color, var(--color-primary));
+  text-decoration: underline;
+}
+
+.modal__content :deep(mark) {
+  border-radius: 3px;
+  padding: 0.05em 0.25em;
+  color: #1a1a1a;
+}
+
+.modal__content :deep(mark.mark--yellow) {
+  background: #fef08a;
+}
+
+.modal__content :deep(mark.mark--red) {
+  background: #fecaca;
 }
 
 /* Footer */
@@ -202,7 +366,7 @@ function handleDelete() {
 
 .modal__close-btn {
   padding: 8px 20px;
-  border: 1.5px solid var(--color-border);
+  border: 0.8px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
@@ -239,5 +403,16 @@ function handleDelete() {
 .modal-leave-to .modal {
   transform: translateY(8px) scale(0.97);
   opacity: 0;
+}
+
+@media (max-width: 1025px) {
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal {
+    height: 98dvh;
+    max-height: 98dvh;
+  }
 }
 </style>

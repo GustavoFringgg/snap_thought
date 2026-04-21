@@ -715,7 +715,7 @@ async function handleDelete(id: string) {
 }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 1025px) {
   .tag-page__header {
     padding: 20px 16px 0;
   }

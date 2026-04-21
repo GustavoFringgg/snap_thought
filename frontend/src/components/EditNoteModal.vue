@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="show" class="modal-backdrop" @click.self="$emit('close')">
+      <div v-if="show" class="modal-backdrop">
         <div
           class="modal"
           :style="`--day-color: var(${colorVar})`"
@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { NOTE_TAGS, TAG_COLORS } from "../types";
 import type { Note, NoteTag } from "../types";
 
@@ -107,6 +107,13 @@ watch(
     }
   },
 );
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.show) emit('close')
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
 function toggleTag(t: NoteTag) {
   const idx = selectedTags.value.indexOf(t);
