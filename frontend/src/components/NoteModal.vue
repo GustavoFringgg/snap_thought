@@ -69,10 +69,14 @@ const highlightExt: TokenizerAndRendererExtension = {
   },
 }
 
+function escapeHtml(str: string) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 const renderer = {
   code({ text, lang }: { text: string; lang?: string }) {
     const lines = text.split('\n').map((line, i) =>
-      `<span class="code-line"><span class="line-number">${i + 1}</span><span class="line-content">${line}</span></span>`
+      `<span class="code-line"><span class="line-number">${i + 1}</span><span class="line-content">${escapeHtml(line)}</span></span>`
     ).join('\n')
     const langLabel = lang ? `<span class="code-lang">${lang}</span>` : ''
     return `<pre>${langLabel}<code>${lines}</code></pre>`
