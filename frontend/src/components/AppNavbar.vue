@@ -276,7 +276,7 @@ const currentWeek = computed(() => {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1025px) {
   .navbar__inner {
     padding: 0 16px;
     gap: 12px;

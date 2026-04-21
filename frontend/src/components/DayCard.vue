@@ -5,16 +5,6 @@
     :style="`--day-color: var(${day.colorVar})`"
     :aria-label="`${day.label} 的筆記`"
   >
-    <!-- Card Header -->
-    <div class="day-card__header">
-      <div class="day-card__title-row">
-        <div class="day-card__day-badge">
-          <span class="day-card__day-name">{{ day.label }}</span>
-          <span v-if="isToday" class="day-card__today-chip">今天</span>
-        </div>
-        <span class="day-card__count">{{ day.notes.length }} 則</span>
-      </div>
-    </div>
 
     <!-- Add Note Button -->
     <div class="day-card__add-section">
@@ -317,7 +307,7 @@ function updateNote(content: string, tags: NoteTag[]) {
   color: var(--color-text-muted) !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1025px) {
   .day-card__header {
     padding: 16px 16px 0;
   }

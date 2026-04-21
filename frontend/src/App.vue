@@ -16,7 +16,6 @@
         <!-- Page header -->
         <div class="page-header">
           <div class="page-header__left">
-            <h1 class="page-header__title">學習筆記</h1>
             <div class="week-selector">
               <!-- Year dropdown -->
               <div class="select-wrap">
@@ -104,12 +103,6 @@
             </div>
           </div>
 
-          <div class="page-header__stats">
-            <div class="stat-chip">
-              <span class="stat-chip__num">{{ totalNotes }}</span>
-              <span class="stat-chip__label">則筆記</span>
-            </div>
-          </div>
         </div>
 
         <!-- Desktop: 5-column grid -->
@@ -128,27 +121,6 @@
 
         <!-- Mobile: single active card -->
         <div class="mobile-only">
-          <div class="mobile-day-nav">
-            <button
-              v-for="day in days"
-              :key="day.key"
-              class="mobile-day-btn"
-              :class="{
-                'mobile-day-btn--active': activeDay === day.key,
-                'mobile-day-btn--today': isCurrentWeek && todayKey === day.key,
-              }"
-              :style="
-                activeDay === day.key ? `--btn-color: var(${day.colorVar})` : ''
-              "
-              @click="handleChangeDay(day.key)"
-            >
-              {{ day.shortLabel }}
-              <span
-                v-if="isCurrentWeek && todayKey === day.key"
-                class="mobile-today-dot"
-              ></span>
-            </button>
-          </div>
 
           <DayCard
             v-if="activeDayData"
@@ -735,7 +707,7 @@ onMounted(fetchWeekNotes);
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1025px) {
   .main {
     padding: 16px;
   }
