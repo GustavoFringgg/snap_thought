@@ -265,16 +265,16 @@ function handleDelete() {
 .modal__content :deep(code) {
   font-family: 'Consolas', 'Menlo', 'Monaco', var(--font-mono);
   font-size: 0.88em;
-  background: #1e2030;
-  color: #e4e9ff;
-  border: 1px solid #2f3354;
+  background: #FFF7ED;
+  color: #7C2D12;
+  border: 1px solid #F97316;
   border-radius: 4px;
   padding: 0.1em 0.4em;
 }
 
 .modal__content :deep(pre) {
-  background: #1e2030;
-  border: 1px solid #2f3354;
+  background: #FFF7ED;
+  border: 1px solid #F97316;
   border-radius: var(--radius-sm);
   overflow-x: auto;
   margin: 0 0 0.75em;
@@ -287,9 +287,9 @@ function handleDelete() {
   padding: 4px 14px;
   font-size: 11px;
   font-family: 'Consolas', 'Menlo', var(--font-mono);
-  color: #636d8f;
-  border-bottom: 1px solid #2f3354;
-  background: #191b2a;
+  color: #7C2D12;
+  border-bottom: 1px solid #F97316;
+  background: #FFE8D0;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
@@ -299,7 +299,7 @@ function handleDelete() {
   border: none;
   padding: 12px 0;
   font-size: 13px;
-  color: #e4e9ff;
+  color: #7C2D12;
   line-height: 1.2;
 }
 
