@@ -4,12 +4,13 @@
       :days="days"
       :active-day="activeDay"
       :current-view="currentView"
+      v-model:searchQuery="searchQuery"
       @change-day="handleChangeDay"
       @change-view="currentView = $event"
     />
 
     <!-- Tag browse page -->
-    <TagBrowsePage v-if="currentView === 'tags'" />
+    <TagBrowsePage v-if="currentView === 'tags'" :search-query="searchQuery" />
 
     <main v-else class="main">
       <div class="main__inner">
@@ -236,7 +237,7 @@ const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 // 最早可選週：2026/03/23 (Mon)
-const MIN_WEEK_DATE = new Date(2026, 2, 23);
+const MIN_WEEK_DATE = new Date(2026, 2, 30);
 MIN_WEEK_DATE.setHours(0, 0, 0, 0);
 
 const selectedYear = ref(currentYear);
@@ -316,6 +317,7 @@ const todayKey = computed<DayKey | null>(() => {
 
 const activeDay = ref<DayKey>(todayKey.value ?? "mon");
 const currentView = ref<'week' | 'tags'>('week');
+const searchQuery = ref('');
 const activeDayData = computed(() =>
   days.value.find((d) => d.key === activeDay.value),
 );

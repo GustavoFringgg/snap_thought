@@ -206,7 +206,7 @@ const formattedTime = computed(() => {
 }
 
 .note-item__content {
-  font-size: 13.5px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--color-text);
   word-break: break-word;

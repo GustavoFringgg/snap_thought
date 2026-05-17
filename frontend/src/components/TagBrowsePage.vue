@@ -101,7 +101,7 @@
                       v-for="tag in note.tags"
                       :key="tag"
                       class="browse-card__tag"
-                      :style="`background:${TAG_COLORS[tag].bg};color:${TAG_COLORS[tag].text};border-color:${TAG_COLORS[tag].border}`"
+                      :style="tagStyle(tag)"
                     >{{ tag }}</span>
                   </span>
                 </div>
@@ -130,10 +130,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, toRef } from 'vue'
 import NoteModal from './NoteModal.vue'
 import { NOTE_TAGS, TAG_COLORS } from '../types'
 import type { NoteTag, NoteWithContext, DayKey } from '../types'
+
+const props = withDefaults(defineProps<{ searchQuery?: string }>(), { searchQuery: '' })
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -193,11 +195,15 @@ const tagStats = computed(() => {
 })
 
 // ── Filtered notes ───────────────────────────────────────────────
-const filteredNotes = computed(() =>
-  selectedTag.value
+const filteredNotes = computed(() => {
+  let notes = selectedTag.value
     ? allNotes.value.filter(n => n.tags?.includes(selectedTag.value!))
     : allNotes.value
-)
+
+  const q = props.searchQuery.trim().toLowerCase()
+  if (q) notes = notes.filter(n => n.content.toLowerCase().includes(q))
+  return notes
+})
 
 // ── Grouped by week ──────────────────────────────────────────────
 interface NoteGroup {
@@ -252,6 +258,13 @@ function formatDate(iso: string): string {
 
 function truncate(text: string, max = 100): string {
   return text.length > max ? text.slice(0, max) + '…' : text
+}
+
+const FALLBACK_COLOR = { bg: '#F3F4F6', text: '#374151', border: '#D1D5DB' }
+
+function tagStyle(tag: string): string {
+  const c = TAG_COLORS[tag as NoteTag] ?? FALLBACK_COLOR
+  return `background:${c.bg};color:${c.text};border-color:${c.border}`
 }
 
 function openNote(note: NoteWithContext) {

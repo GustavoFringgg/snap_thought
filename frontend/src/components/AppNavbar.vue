@@ -34,6 +34,21 @@
       <div v-else class="navbar__view-title"></div>
 
       <div class="navbar__meta">
+        <!-- Search (tag view only) -->
+        <div v-if="currentView === 'tags'" class="navbar__search">
+          <svg class="navbar__search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input
+            class="navbar__search-input"
+            type="search"
+            placeholder="搜尋筆記內容…"
+            :value="searchQuery"
+            @input="$emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
+          />
+        </div>
+
         <!-- View toggle -->
         <div class="navbar__view-toggle">
           <button
@@ -78,11 +93,13 @@ const props = defineProps<{
   days: DayData[]
   activeDay: DayKey
   currentView: 'week' | 'tags'
+  searchQuery: string
 }>()
 
 defineEmits<{
   'change-day': [day: DayKey]
   'change-view': [view: 'week' | 'tags']
+  'update:searchQuery': [value: string]
 }>()
 
 const todayDayKey = computed<DayKey | null>(() => {
@@ -219,6 +236,47 @@ const currentWeek = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Search */
+.navbar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.navbar__search-input {
+  padding: 6px 12px 6px 30px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-text);
+  width: 200px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.navbar__search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.navbar__search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.navbar__search-input::-webkit-search-cancel-button {
+  cursor: pointer;
 }
 
 /* View toggle */

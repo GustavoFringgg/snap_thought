@@ -2,7 +2,13 @@
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="note" class="modal-backdrop">
-        <div class="modal" :style="`--day-color: var(${colorVar})`" role="dialog" aria-modal="true" :aria-label="`${dayLabel} 筆記詳情`">
+        <div
+          class="modal"
+          :style="`--day-color: var(${colorVar})`"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="`${dayLabel} 筆記詳情`"
+        >
           <!-- Header -->
           <div class="modal__header">
             <div class="modal__title-row">
@@ -15,33 +21,63 @@
                   :key="tag"
                   class="modal__tag"
                   :style="`background:${TAG_COLORS[tag].bg};color:${TAG_COLORS[tag].text};border-color:${TAG_COLORS[tag].border}`"
-                >{{ tag }}</span>
+                  >{{ tag }}</span
+                >
               </span>
             </div>
-            <button class="modal__close" aria-label="關閉" @click="$emit('close')">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <button
+              class="modal__close"
+              aria-label="關閉"
+              @click="$emit('close')"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 3l10 10M13 3L3 13"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </div>
 
           <!-- Body -->
           <div class="modal__body">
-            <div class="modal__content markdown-body" v-html="renderedContent"></div>
+            <div
+              class="modal__content markdown-body"
+              v-html="renderedContent"
+            ></div>
           </div>
 
           <!-- Footer -->
           <div class="modal__footer">
-            <button
-              class="modal__delete-btn"
-              @click="handleDelete"
-            >
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1M6 6.5v3M8 6.5v3M3 3.5l.667 7a.5.5 0 0 0 .5.5h5.666a.5.5 0 0 0 .5-.5L11 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            <button class="modal__delete-btn" @click="handleDelete">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 14 14"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1M6 6.5v3M8 6.5v3M3 3.5l.667 7a.5.5 0 0 0 .5.5h5.666a.5.5 0 0 0 .5-.5L11 3.5"
+                  stroke="currentColor"
+                  stroke-width="1.3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
               刪除筆記
             </button>
-            <button class="modal__close-btn" @click="$emit('close')">關閉</button>
+            <button class="modal__close-btn" @click="$emit('close')">
+              關閉
+            </button>
           </div>
         </div>
       </div>
@@ -50,73 +86,80 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
-import { marked, type TokenizerAndRendererExtension } from 'marked'
-import DOMPurify from 'dompurify'
+import { computed, onMounted, onUnmounted } from "vue";
+import { marked, type TokenizerAndRendererExtension } from "marked";
+import DOMPurify from "dompurify";
 
 const highlightExt: TokenizerAndRendererExtension = {
-  name: 'highlight',
-  level: 'inline',
-  start: (src) => src.indexOf('=='),
+  name: "highlight",
+  level: "inline",
+  start: (src) => src.indexOf("=="),
   tokenizer(src) {
-    const red = src.match(/^===([\s\S]+?)===/)
-    if (red) return { type: 'highlight', raw: red[0], text: red[1], color: 'red' }
-    const yellow = src.match(/^==([\s\S]+?)==/)
-    if (yellow) return { type: 'highlight', raw: yellow[0], text: yellow[1], color: 'yellow' }
+    const red = src.match(/^===([\s\S]+?)===/);
+    if (red)
+      return { type: "highlight", raw: red[0], text: red[1], color: "red" };
+    const yellow = src.match(/^==([\s\S]+?)==/);
+    if (yellow)
+      return {
+        type: "highlight",
+        raw: yellow[0],
+        text: yellow[1],
+        color: "yellow",
+      };
   },
   renderer(token) {
-    return `<mark class="mark--${token.color}">${token.text}</mark>`
+    return `<mark class="mark--${token.color}">${token.text}</mark>`;
   },
-}
+};
 
 function escapeHtml(str: string) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 const renderer = {
   code({ text, lang }: { text: string; lang?: string }) {
-    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : ''
-    return `<pre>${langLabel}<code>${escapeHtml(text)}</code></pre>`
-  }
-}
+    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : "";
+    return `<pre>${langLabel}<code>${escapeHtml(text)}</code></pre>`;
+  },
+};
 
-marked.use({ breaks: true, extensions: [highlightExt], renderer })
-import { TAG_COLORS } from '../types'
-import type { Note } from '../types'
+marked.use({ breaks: true, extensions: [highlightExt], renderer });
+import { TAG_COLORS } from "../types";
+import type { Note } from "../types";
 
 const props = defineProps<{
-  note: Note | null
-  dayLabel: string
-  colorVar: string
-}>()
+  note: Note | null;
+  dayLabel: string;
+  colorVar: string;
+}>();
 
 const emit = defineEmits<{
-  close: []
-  delete: [id: string]
-}>()
+  close: [];
+  delete: [id: string];
+}>();
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && props.note) emit('close')
+  if (e.key === "Escape" && props.note) emit("close");
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+onMounted(() => window.addEventListener("keydown", onKeydown));
+onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 const renderedContent = computed(() => {
-  if (!props.note) return ''
-  return DOMPurify.sanitize(marked(props.note.content) as string)
-})
+  if (!props.note) return "";
+  return DOMPurify.sanitize(marked(props.note.content) as string);
+});
 
 const formattedTime = computed(() => {
-  if (!props.note) return ''
-  const d = new Date(props.note.createdAt)
-  return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
-})
+  if (!props.note) return "";
+  const d = new Date(props.note.createdAt);
+  return d.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+});
 
 function handleDelete() {
-  if (!props.note) return
-  emit('delete', props.note.id)
-  emit('close')
+  if (!props.note) return;
+  emit("delete", props.note.id);
+  emit("close");
 }
 </script>
 
@@ -137,7 +180,9 @@ function handleDelete() {
 .modal {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 1080px;
   height: 700px;
@@ -229,7 +274,7 @@ function handleDelete() {
 }
 
 .modal__content {
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.85;
   color: var(--color-text);
   word-break: break-word;
@@ -244,9 +289,15 @@ function handleDelete() {
   line-height: 1.3;
 }
 
-.modal__content :deep(h1) { font-size: 0.8em; }
-.modal__content :deep(h2) { font-size: 0.85em; }
-.modal__content :deep(h3) { font-size: 1.1em; }
+.modal__content :deep(h1) {
+  font-size: 0.8em;
+}
+.modal__content :deep(h2) {
+  font-size: 0.85em;
+}
+.modal__content :deep(h3) {
+  font-size: 1.1em;
+}
 
 .modal__content :deep(p) {
   margin: 0 0 0.75em;
@@ -263,18 +314,18 @@ function handleDelete() {
 }
 
 .modal__content :deep(code) {
-  font-family: 'Consolas', 'Menlo', 'Monaco', var(--font-mono);
+  font-family: "Consolas", "Menlo", "Monaco", var(--font-mono);
   font-size: 0.88em;
-  background: #FFF7ED;
-  color: #7C2D12;
-  border: 1px solid #F97316;
+  background: #fff7ed;
+  color: #7c2d12;
+  border: 1px solid #f97316;
   border-radius: 4px;
   padding: 0.1em 0.4em;
 }
 
 .modal__content :deep(pre) {
-  background: #FFF7ED;
-  border: 1px solid #F97316;
+  background: #fff7ed;
+  border: 1px solid #f97316;
   border-radius: var(--radius-sm);
   overflow-x: auto;
   margin: 0 0 0.75em;
@@ -286,10 +337,10 @@ function handleDelete() {
   display: block;
   padding: 4px 14px;
   font-size: 11px;
-  font-family: 'Consolas', 'Menlo', var(--font-mono);
-  color: #7C2D12;
-  border-bottom: 1px solid #F97316;
-  background: #FFE8D0;
+  font-family: "Consolas", "Menlo", var(--font-mono);
+  color: #7c2d12;
+  border-bottom: 1px solid #f97316;
+  background: #ffe8d0;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
@@ -299,10 +350,9 @@ function handleDelete() {
   border: none;
   padding: 12px 0;
   font-size: 13px;
-  color: #7C2D12;
+  color: #7c2d12;
   line-height: 1.2;
 }
-
 
 .modal__content :deep(blockquote) {
   border-left: 3px solid var(--day-color, var(--color-primary));
@@ -311,8 +361,12 @@ function handleDelete() {
   color: var(--color-text-muted);
 }
 
-.modal__content :deep(strong) { font-weight: 700; }
-.modal__content :deep(em) { font-style: italic; }
+.modal__content :deep(strong) {
+  font-weight: 700;
+}
+.modal__content :deep(em) {
+  font-style: italic;
+}
 
 .modal__content :deep(hr) {
   border: none;
@@ -354,10 +408,10 @@ function handleDelete() {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border: 1px solid #FECACA;
+  border: 1px solid #fecaca;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: #EF4444;
+  color: #ef4444;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
@@ -366,8 +420,8 @@ function handleDelete() {
 }
 
 .modal__delete-btn:hover {
-  background: #FEE2E2;
-  border-color: #FCA5A5;
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 
 .modal__close-btn {
@@ -395,7 +449,9 @@ function handleDelete() {
 }
 .modal-enter-active .modal,
 .modal-leave-active .modal {
-  transition: transform 200ms ease, opacity 200ms ease;
+  transition:
+    transform 200ms ease,
+    opacity 200ms ease;
 }
 
 .modal-enter-from,

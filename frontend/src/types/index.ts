@@ -11,30 +11,42 @@ export type NoteTag =
   | "TailWind"
   | "Leetcode"
   | "PostgreSQL"
-  | "後端框架"
+  | "FastAPI"
   | "Others"
   | "演算法"
   | "資料結構"
-  | "Claude筆記";
+  | "Claude筆記"
+  | "Nuxt"
+  | "HTML"
+  | "TODO"
+  | "測試"
+  | "SQLAlchemy"
+  | "Pydantic";
 
 export const NOTE_TAGS: NoteTag[] = [
   "JS",
   "TS",
-  "Vue",
-  "CICD",
-  "Git",
+  "HTML",
   "CSS",
+  "Git",
+  "Vue",
+  "Nuxt",
+  "CICD",
   "Python",
   "Docker",
+  "FastAPI",
   "SQLModel",
+  "SQLAlchemy",
+  "Pydantic",
   "TailWind",
-  "後端框架",
   "PostgreSQL",
   "Leetcode",
-  "Others",
+  "測試",
   "演算法",
   "資料結構",
   "Claude筆記",
+  "Others",
+  "TODO",
 ];
 
 export const TAG_COLORS: Record<
@@ -54,10 +66,16 @@ export const TAG_COLORS: Record<
   PostgreSQL: { bg: "#E0F2FE", text: "#075985", border: "#38BDF8" },
   Leetcode: { bg: "#FFF7ED", text: "#7C2D12", border: "#F97316" },
   Others: { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
-  後端框架: { bg: "#ECFCCB", text: "#365314", border: "#84CC16" },
+  FastAPI: { bg: "#ECFCCB", text: "#365314", border: "#84CC16" },
   演算法: { bg: "#f3dbce", text: "#ce9634", border: "#eec78e" },
-  資料結構: { bg: "#eded52", text: "#788ecf", border: "#0e5618" },
+  資料結構: { bg: "#F1F5F9", text: "#1E293B", border: "#64748B" },
   Claude筆記: { bg: "#FFF0E6", text: "#C4500A", border: "#F97316" },
+  Nuxt: { bg: "#DCFCE7", text: "#14532D", border: "#00DC82" },
+  HTML: { bg: "#FFF1EE", text: "#9A1200", border: "#E34F26" },
+  TODO: { bg: "#FEFCE8", text: "#713F12", border: "#FACC15" },
+  測試: { bg: "#F0FDF4", text: "#166534", border: "#4ADE80" },
+  SQLAlchemy: { bg: "#FEF3C7", text: "#78350F", border: "#F59E0B" },
+  Pydantic: { bg: "#EDE9FE", text: "#4C1D95", border: "#8B5CF6" },
 };
 
 export interface Note {
