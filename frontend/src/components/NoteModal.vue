@@ -75,9 +75,17 @@
               </svg>
               刪除筆記
             </button>
-            <button class="modal__close-btn" @click="$emit('close')">
-              關閉
-            </button>
+            <div style="display:flex;gap:8px">
+              <button class="modal__edit-btn" @click="$emit('edit')">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                編輯
+              </button>
+              <button class="modal__close-btn" @click="$emit('close')">
+                關閉
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -136,6 +144,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   delete: [id: string];
+  edit: [];
 }>();
 
 function onKeydown(e: KeyboardEvent) {
@@ -422,6 +431,28 @@ function handleDelete() {
 .modal__delete-btn:hover {
   background: #fee2e2;
   border-color: #fca5a5;
+}
+
+.modal__edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 0.8px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.modal__edit-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.06);
 }
 
 .modal__close-btn {

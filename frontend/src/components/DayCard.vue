@@ -89,6 +89,7 @@
       :colorVar="day.colorVar"
       @close="selectedNote = null"
       @delete="deleteNote"
+      @edit="openEditModal(selectedNote!); selectedNote = null"
     />
   </section>
 </template>

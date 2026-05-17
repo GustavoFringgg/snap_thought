@@ -125,6 +125,16 @@
       :colorVar="selectedNote ? DAY_INFO[selectedNote.dayKey].colorVar : '--color-primary'"
       @close="selectedNote = null"
       @delete="handleDelete"
+      @edit="handleEdit"
+    />
+
+    <EditNoteModal
+      :show="!!editingNote"
+      :note="editingNote"
+      :dayLabel="editingNote ? DAY_INFO[editingNote.dayKey].label : ''"
+      :colorVar="editingNote ? DAY_INFO[editingNote.dayKey].colorVar : '--color-primary'"
+      @close="editingNote = null"
+      @submit="handleEditSubmit"
     />
   </div>
 </template>
@@ -132,6 +142,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, toRef } from 'vue'
 import NoteModal from './NoteModal.vue'
+import EditNoteModal from './EditNoteModal.vue'
 import { NOTE_TAGS, TAG_COLORS } from '../types'
 import type { NoteTag, NoteWithContext, DayKey } from '../types'
 
@@ -161,6 +172,7 @@ const allNotes = ref<NoteWithContext[]>([])
 const loading = ref(false)
 const selectedTag = ref<NoteTag | null>(null)
 const selectedNote = ref<NoteWithContext | null>(null)
+const editingNote = ref<NoteWithContext | null>(null)
 
 // ── Data fetching ────────────────────────────────────────────────
 async function fetchNotes() {
@@ -269,6 +281,29 @@ function tagStyle(tag: string): string {
 
 function openNote(note: NoteWithContext) {
   selectedNote.value = note
+}
+
+function handleEdit() {
+  editingNote.value = selectedNote.value
+  selectedNote.value = null
+}
+
+async function handleEditSubmit(content: string, tags: NoteTag[]) {
+  if (!editingNote.value) return
+  const id = editingNote.value.id
+  editingNote.value = null
+  try {
+    await fetch(`${API_BASE}/api/v1/notes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, tags: tags.length ? tags : undefined }),
+    })
+    allNotes.value = allNotes.value.map(n =>
+      n.id === id ? { ...n, content, tags: tags.length ? tags : undefined } : n
+    )
+  } catch (e) {
+    console.error('Failed to update note:', e)
+  }
 }
 
 async function handleDelete(id: string) {
