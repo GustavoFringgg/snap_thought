@@ -34,6 +34,9 @@
       </div>
     </div>
 
+    <!-- Body: note list + random panel -->
+    <div class="tag-page__body">
+
     <!-- Content -->
     <div class="tag-page__content">
 
@@ -118,6 +121,50 @@
       </template>
     </div>
 
+    <!-- Random review panel -->
+    <aside class="random-panel">
+      <div class="random-panel__header">
+        <span class="random-panel__title">隨機複習</span>
+        <button class="random-panel__btn" :disabled="randomLoading" @click="fetchRandomNote" aria-label="再隨機一次">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" :class="{ 'spinning': randomLoading }">
+            <path d="M13 2.5A6 6 0 1 1 7.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M13 2.5V6M13 2.5H9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div v-if="randomLoading" class="random-panel__loading">
+        <div class="spinner"></div>
+      </div>
+
+      <div v-else-if="!randomNote" class="random-panel__empty">
+        還沒有任何筆記
+      </div>
+
+      <div v-else class="random-panel__card">
+        <!-- Meta -->
+        <div class="random-panel__meta">
+          <span class="random-panel__day" :style="`color: var(${DAY_INFO[randomNote.dayKey].colorVar})`">
+            {{ DAY_INFO[randomNote.dayKey].label }}
+          </span>
+          <span class="random-panel__week">第 {{ randomNote.isoWeek }} 週・{{ randomNote.year }}</span>
+        </div>
+        <!-- Tags -->
+        <div v-if="randomNote.tags?.length" class="random-panel__tags">
+          <span
+            v-for="tag in randomNote.tags"
+            :key="tag"
+            class="random-panel__tag"
+            :style="tagStyle(tag)"
+          >{{ tag }}</span>
+        </div>
+        <!-- Content -->
+        <div class="random-panel__content markdown-body" v-html="renderedRandomContent"></div>
+      </div>
+    </aside>
+
+    </div><!-- end tag-page__body -->
+
     <!-- Note detail modal -->
     <NoteModal
       :note="selectedNote"
@@ -141,6 +188,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, toRef } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import NoteModal from './NoteModal.vue'
 import EditNoteModal from './EditNoteModal.vue'
 import { NOTE_TAGS, TAG_COLORS } from '../types'
@@ -173,6 +222,8 @@ const loading = ref(false)
 const selectedTag = ref<NoteTag | null>(null)
 const selectedNote = ref<NoteWithContext | null>(null)
 const editingNote = ref<NoteWithContext | null>(null)
+const randomNote = ref<NoteWithContext | null>(null)
+const randomLoading = ref(false)
 
 // ── Data fetching ────────────────────────────────────────────────
 async function fetchNotes() {
@@ -188,7 +239,24 @@ async function fetchNotes() {
   }
 }
 
-onMounted(fetchNotes)
+async function fetchRandomNote() {
+  randomLoading.value = true
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/notes/random`)
+    if (res.ok) randomNote.value = await res.json()
+  } catch (e) {
+    console.error('Failed to fetch random note:', e)
+  } finally {
+    randomLoading.value = false
+  }
+}
+
+const renderedRandomContent = computed(() => {
+  if (!randomNote.value) return ''
+  return DOMPurify.sanitize(marked(randomNote.value.content) as string)
+})
+
+onMounted(() => { fetchNotes(); fetchRandomNote() })
 
 // ── Tag stats ────────────────────────────────────────────────────
 const tagStats = computed(() => {
@@ -324,6 +392,14 @@ async function handleDelete(id: string) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* ── Body (two-column) ── */
+.tag-page__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  gap: 0;
 }
 
 /* ── Header ── */
@@ -467,6 +543,123 @@ async function handleDelete(id: string) {
   display: flex;
   flex-direction: column;
   gap: 0;
+  min-width: 0;
+}
+
+/* ── Random panel ── */
+.random-panel {
+  flex: 0 0 55%;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.random-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.random-panel__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.2px;
+}
+
+.random-panel__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.random-panel__btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.random-panel__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.random-panel__btn svg.spinning {
+  animation: spin 0.7s linear infinite;
+}
+
+.random-panel__loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.random-panel__empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.random-panel__card {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.random-panel__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.random-panel__day {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.random-panel__week {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.random-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.random-panel__tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.random-panel__content {
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--color-text);
+  word-break: break-word;
 }
 
 /* ── Loading ── */
@@ -752,6 +945,10 @@ async function handleDelete(id: string) {
   }
 
   .browse-card__arrow {
+    display: none;
+  }
+
+  .random-panel {
     display: none;
   }
 }

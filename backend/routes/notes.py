@@ -58,6 +58,23 @@ async def create_note(body: NoteCreate):
     return doc_to_response(doc)
 
 
+@router.get("/random", response_model=NoteWithContext)
+async def get_random_note():
+    pipeline = [{"$sample": {"size": 1}}]
+    async for doc in notes_collection.aggregate(pipeline):
+        return NoteWithContext(
+            id=str(doc["_id"]),
+            content=doc["content"],
+            createdAt=doc["createdAt"],
+            updatedAt=doc.get("updatedAt"),
+            tags=doc.get("tags"),
+            year=doc["year"],
+            isoWeek=doc["isoWeek"],
+            dayKey=doc["dayKey"],
+        )
+    raise HTTPException(status_code=404, detail="No notes found")
+
+
 @router.get("/by-tag", response_model=TagNotesResponse)
 async def get_notes_by_tag(tag: Optional[str] = Query(None)):
     if tag:
