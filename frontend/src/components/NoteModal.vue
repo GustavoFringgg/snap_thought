@@ -218,7 +218,7 @@ function handleDelete() {
 }
 
 .modal__day-label {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--color-text);
 }
@@ -315,7 +315,7 @@ function handleDelete() {
 
 .modal__content :deep(code) {
   font-family: "Consolas", "Menlo", "Monaco", var(--font-mono);
-  font-size: 0.88em;
+  font-size: 17px;
   background: #fff7ed;
   color: #7c2d12;
   border: 1px solid #f97316;
@@ -349,7 +349,7 @@ function handleDelete() {
   background: none;
   border: none;
   padding: 12px 0;
-  font-size: 13px;
+  font-size: 17px;
   color: #7c2d12;
   line-height: 1.2;
 }
