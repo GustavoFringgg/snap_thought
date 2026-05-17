@@ -142,24 +142,26 @@
       </div>
 
       <div v-else class="random-panel__card">
-        <!-- Meta -->
-        <div class="random-panel__meta">
-          <span class="random-panel__day" :style="`color: var(${DAY_INFO[randomNote.dayKey].colorVar})`">
-            {{ DAY_INFO[randomNote.dayKey].label }}
-          </span>
-          <span class="random-panel__week">第 {{ randomNote.isoWeek }} 週・{{ randomNote.year }}</span>
+        <div class="random-panel__card-inner">
+          <!-- Meta -->
+          <div class="random-panel__meta">
+            <span class="random-panel__day" :style="`color: var(${DAY_INFO[randomNote.dayKey].colorVar})`">
+              {{ DAY_INFO[randomNote.dayKey].label }}
+            </span>
+            <span class="random-panel__week">第 {{ randomNote.isoWeek }} 週・{{ randomNote.year }}</span>
+          </div>
+          <!-- Tags -->
+          <div v-if="randomNote.tags?.length" class="random-panel__tags">
+            <span
+              v-for="tag in randomNote.tags"
+              :key="tag"
+              class="random-panel__tag"
+              :style="tagStyle(tag)"
+            >{{ tag }}</span>
+          </div>
+          <!-- Content -->
+          <div class="random-panel__content markdown-body" v-html="renderedRandomContent"></div>
         </div>
-        <!-- Tags -->
-        <div v-if="randomNote.tags?.length" class="random-panel__tags">
-          <span
-            v-for="tag in randomNote.tags"
-            :key="tag"
-            class="random-panel__tag"
-            :style="tagStyle(tag)"
-          >{{ tag }}</span>
-        </div>
-        <!-- Content -->
-        <div class="random-panel__content markdown-body" v-html="renderedRandomContent"></div>
       </div>
     </aside>
 
@@ -617,10 +619,20 @@ async function handleDelete(id: string) {
 .random-panel__card {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.random-panel__card-inner {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .random-panel__meta {
