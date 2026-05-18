@@ -95,43 +95,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from "vue";
-import { marked, type TokenizerAndRendererExtension } from "marked";
-import DOMPurify from "dompurify";
-
-const highlightExt: TokenizerAndRendererExtension = {
-  name: "highlight",
-  level: "inline",
-  start: (src) => src.indexOf("=="),
-  tokenizer(src) {
-    const red = src.match(/^===([\s\S]+?)===/);
-    if (red)
-      return { type: "highlight", raw: red[0], text: red[1], color: "red" };
-    const yellow = src.match(/^==([\s\S]+?)==/);
-    if (yellow)
-      return {
-        type: "highlight",
-        raw: yellow[0],
-        text: yellow[1],
-        color: "yellow",
-      };
-  },
-  renderer(token) {
-    return `<mark class="mark--${token.color}">${token.text}</mark>`;
-  },
-};
-
-function escapeHtml(str: string) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-const renderer = {
-  code({ text, lang }: { text: string; lang?: string }) {
-    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : "";
-    return `<pre>${langLabel}<code>${escapeHtml(text)}</code></pre>`;
-  },
-};
-
-marked.use({ breaks: true, extensions: [highlightExt], renderer });
+import { renderMarkdown } from "../utils/markdown";
 import { TAG_COLORS } from "../types";
 import type { Note } from "../types";
 
@@ -156,7 +120,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 const renderedContent = computed(() => {
   if (!props.note) return "";
-  return DOMPurify.sanitize(marked(props.note.content) as string);
+  return renderMarkdown(props.note.content);
 });
 
 const formattedTime = computed(() => {

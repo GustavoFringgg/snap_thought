@@ -190,8 +190,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, toRef } from 'vue'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
+import { renderMarkdown } from '../utils/markdown'
 import NoteModal from './NoteModal.vue'
 import EditNoteModal from './EditNoteModal.vue'
 import { NOTE_TAGS, TAG_COLORS } from '../types'
@@ -255,7 +254,7 @@ async function fetchRandomNote() {
 
 const renderedRandomContent = computed(() => {
   if (!randomNote.value) return ''
-  return DOMPurify.sanitize(marked(randomNote.value.content) as string)
+  return renderMarkdown(randomNote.value.content)
 })
 
 onMounted(() => { fetchNotes(); fetchRandomNote() })
@@ -633,6 +632,8 @@ async function handleDelete(id: string) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .random-panel__meta {
@@ -672,6 +673,62 @@ async function handleDelete(id: string) {
   line-height: 1.75;
   color: var(--color-text);
   word-break: break-word;
+  min-width: 0;
+}
+
+.random-panel__content :deep(code) {
+  font-family: "Consolas", "Menlo", "Monaco", var(--font-mono);
+  font-size: 0.88em;
+  background: #fff7ed;
+  color: #7c2d12;
+  border: 1px solid #f97316;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+}
+
+.random-panel__content :deep(pre) {
+  background: #fff7ed;
+  border: 1px solid #f97316;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0 0 0.75em;
+  padding: 0;
+}
+
+.random-panel__content :deep(pre) .code-lang {
+  display: block;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-family: "Consolas", "Menlo", var(--font-mono);
+  color: #7c2d12;
+  border-bottom: 1px solid #f97316;
+  background: #ffe8d0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.random-panel__content :deep(pre) code {
+  display: block;
+  background: none;
+  border: none;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: #7c2d12;
+  line-height: 1.5;
+}
+
+.random-panel__content :deep(mark.mark--yellow) {
+  background: #fef08a;
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.random-panel__content :deep(mark.mark--red) {
+  background: #fecaca;
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
 }
 
 /* ── Loading ── */
