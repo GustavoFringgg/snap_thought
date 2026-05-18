@@ -632,7 +632,6 @@ async function handleDelete(id: string) {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden;
   min-width: 0;
 }
 
