@@ -198,7 +198,7 @@ import type { NoteTag, NoteWithContext, DayKey } from '../types'
 
 const props = withDefaults(defineProps<{ searchQuery?: string }>(), { searchQuery: '' })
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+import { apiFetch } from '../utils/api'
 
 // ── Day metadata ─────────────────────────────────────────────────
 const DAY_INFO: Record<DayKey, { label: string; colorVar: string }> = {
@@ -230,7 +230,7 @@ const randomLoading = ref(false)
 async function fetchNotes() {
   loading.value = true
   try {
-    const res = await fetch(`${API_BASE}/api/v1/notes/by-tag`)
+    const res = await apiFetch(`/api/v1/notes/by-tag`)
     const data = await res.json()
     allNotes.value = data.notes ?? []
   } catch (e) {
@@ -243,7 +243,7 @@ async function fetchNotes() {
 async function fetchRandomNote() {
   randomLoading.value = true
   try {
-    const res = await fetch(`${API_BASE}/api/v1/notes/random`)
+    const res = await apiFetch(`/api/v1/notes/random`)
     if (res.ok) randomNote.value = await res.json()
   } catch (e) {
     console.error('Failed to fetch random note:', e)
@@ -362,7 +362,7 @@ async function handleEditSubmit(content: string, tags: NoteTag[]) {
   const id = editingNote.value.id
   editingNote.value = null
   try {
-    await fetch(`${API_BASE}/api/v1/notes/${id}`, {
+    await apiFetch(`/api/v1/notes/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content, tags: tags.length ? tags : undefined }),
@@ -377,7 +377,7 @@ async function handleEditSubmit(content: string, tags: NoteTag[]) {
 
 async function handleDelete(id: string) {
   try {
-    await fetch(`${API_BASE}/api/v1/notes/${id}`, { method: 'DELETE' })
+    await apiFetch(`/api/v1/notes/${id}`, { method: 'DELETE' })
     allNotes.value = allNotes.value.filter(n => n.id !== id)
     selectedNote.value = null
   } catch (e) {

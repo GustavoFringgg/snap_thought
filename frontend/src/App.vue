@@ -1,5 +1,7 @@
 <template>
-  <div class="app">
+  <LoginPage v-if="!authenticated" @success="authenticated = true" />
+
+  <div v-else class="app">
     <AppNavbar
       :days="days"
       :active-day="activeDay"
@@ -138,6 +140,7 @@
 
     <footer class="footer">
       <span>Snop<strong>Thought</strong> — 邊學邊記，複習更有效</span>
+      <button class="logout-btn" @click="logout" title="登出">登出</button>
     </footer>
   </div>
 </template>
@@ -147,7 +150,23 @@ import { ref, computed, reactive, watch, onMounted } from "vue";
 import AppNavbar from "./components/AppNavbar.vue";
 import TagBrowsePage from "./components/TagBrowsePage.vue";
 import DayCard from "./components/DayCard.vue";
+import LoginPage from "./components/LoginPage.vue";
+import { apiFetch, isAuthenticated, clearToken } from "./utils/api";
 import type { DayData, DayKey, Note, NoteTag } from "./types";
+
+// ─── Auth ──────────────────────────────────────────────────────────
+const authenticated = ref(isAuthenticated());
+
+function logout() {
+  clearToken();
+  authenticated.value = false;
+}
+
+onMounted(() => {
+  window.addEventListener("snop:unauthorized", () => {
+    authenticated.value = false;
+  });
+});
 
 // ─── Week generation ───────────────────────────────────────────────
 interface WeekRange {
@@ -345,13 +364,12 @@ const totalNotes = computed(() =>
 );
 
 // ─── API ───────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 const DAY_KEYS: DayKey[] = ["mon", "tue", "wed", "thu", "fri"];
 
 async function fetchWeekNotes() {
   try {
-    const res = await fetch(
-      `${API_BASE}/api/v1/notes?year=${selectedYear.value}&week=${selectedIsoWeek.value}`,
+    const res = await apiFetch(
+      `/api/v1/notes?year=${selectedYear.value}&week=${selectedIsoWeek.value}`,
     );
     const data = await res.json();
     for (const dayKey of DAY_KEYS) {
@@ -440,7 +458,7 @@ function goToNextWeek() {
 
 async function handleAddNote(dayKey: DayKey, content: string, tags: NoteTag[]) {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/notes`, {
+    const res = await apiFetch(`/api/v1/notes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -462,7 +480,7 @@ async function handleAddNote(dayKey: DayKey, content: string, tags: NoteTag[]) {
 
 async function handleDeleteNote(dayKey: DayKey, noteId: string) {
   try {
-    await fetch(`${API_BASE}/api/v1/notes/${noteId}`, { method: "DELETE" });
+    await apiFetch(`/api/v1/notes/${noteId}`, { method: "DELETE" });
     const key = noteKey(selectedYear.value, selectedWeekIndex.value, dayKey);
     notesStore[key] = (notesStore[key] ?? []).filter((n) => n.id !== noteId);
   } catch (e) {
@@ -472,7 +490,7 @@ async function handleDeleteNote(dayKey: DayKey, noteId: string) {
 
 async function handleUpdateNote(dayKey: DayKey, noteId: string, content: string, tags: NoteTag[]) {
   try {
-    await fetch(`${API_BASE}/api/v1/notes/${noteId}`, {
+    await apiFetch(`/api/v1/notes/${noteId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content, tags: tags.length ? tags : undefined }),
@@ -733,6 +751,22 @@ onMounted(fetchWeekNotes);
 .footer strong {
   font-weight: 700;
   color: var(--color-text-secondary);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition);
+}
+
+.logout-btn:hover {
+  color: #dc2626;
 }
 
 /* === RESPONSIVE === */

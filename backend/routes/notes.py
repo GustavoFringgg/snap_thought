@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from bson import ObjectId
 from datetime import datetime, timezone
 
 from database import notes_collection
 from models import NoteCreate, NoteUpdate, NoteResponse, WeekNotesResponse, NoteWithContext, TagNotesResponse
+from auth import verify_token
 from typing import Optional
 
-router = APIRouter(prefix="/api/v1/notes", tags=["notes"])
+router = APIRouter(prefix="/api/v1/notes", tags=["notes"], dependencies=[Depends(verify_token)])
 
 DAY_KEYS = ["mon", "tue", "wed", "thu", "fri"]
 

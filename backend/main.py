@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from database import create_indexes
 from routes.notes import router as notes_router
 from routes.health import router as health_router
+from routes.auth import router as auth_router
 
 
 @asynccontextmanager
@@ -28,6 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(notes_router)
 app.include_router(health_router)
 
