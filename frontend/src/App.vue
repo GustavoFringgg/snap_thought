@@ -308,7 +308,7 @@ function noteKey(year: number, weekIdx: number, dayKey: DayKey) {
 }
 
 // ─── Day definitions ───────────────────────────────────────────────
-const DAY_DEFS: Omit<DayData, "notes">[] = [
+const DAY_DEFS: Omit<DayData, "notes" | "reviewLabel">[] = [
   { key: "mon", label: "星期一", shortLabel: "一", colorVar: "--color-monday" },
   {
     key: "tue",
