@@ -91,6 +91,7 @@ export interface DayData {
   shortLabel: string;
   colorVar: string;
   notes: Note[];
+  reviewLabel: string;
 }
 
 export type DayKey = DayData["key"];

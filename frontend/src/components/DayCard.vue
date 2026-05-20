@@ -6,6 +6,22 @@
     :aria-label="`${day.label} 的筆記`"
   >
 
+    <!-- Header: day name + review badges -->
+    <div class="day-card__header">
+      <div class="day-card__day-badge">
+        <span class="day-card__day-name">{{ day.label }}</span>
+        <span v-if="isToday" class="day-card__today-chip">今天</span>
+      </div>
+      <div class="day-card__review-badges">
+        <span
+          v-for="badge in reviewBadges"
+          :key="badge"
+          class="review-badge"
+          :class="`review-badge--${badge.toLowerCase()}`"
+        >{{ badge }}</span>
+      </div>
+    </div>
+
     <!-- Add Note Button -->
     <div class="day-card__add-section">
       <button class="day-card__add-btn" @click="showAddModal = true" :aria-label="`新增 ${day.label} 筆記`">
@@ -120,6 +136,7 @@ const showEditModal = ref(false);
 const editingNote = ref<Note | null>(null);
 
 const reversedNotes = computed(() => [...props.day.notes].reverse());
+const reviewBadges = computed(() => props.day.reviewLabel.split(" + "));
 
 function addNote(content: string, tags: NoteTag[]) {
   emit("add-note", props.day.key, content, tags);
@@ -222,10 +239,75 @@ function updateNote(content: string, tags: NoteTag[]) {
   font-variant-numeric: tabular-nums;
 }
 
+/* Header */
+.day-card__header {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.day-card__day-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.day-card__day-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--day-color, var(--color-primary));
+  letter-spacing: -0.2px;
+}
+
+.day-card__today-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: var(--day-color, var(--color-primary));
+  color: white;
+}
+
+.day-card__review-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.review-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  font-family: var(--font-mono, monospace);
+}
+
+.review-badge--l {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.review-badge--ll {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+
+.review-badge--lll {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
 /* Add Button */
 .day-card__add-section {
   flex-shrink: 0;
-  padding: 12px 20px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--color-border);
 }
 

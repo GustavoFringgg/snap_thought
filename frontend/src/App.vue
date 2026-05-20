@@ -262,6 +262,24 @@ watch(selectedYear, () => {
   selectedWeekIndex.value = idx;
 });
 
+// ─── Review schedule ───────────────────────────────────────────────
+// Week-of-month derived from the selected Monday's date
+const weekOfMonth = computed(() => {
+  const monday = selectedWeek.value?.monday;
+  if (!monday) return 1;
+  return Math.min(Math.ceil(monday.getDate() / 7), 4);
+});
+
+// Week1: Mon/Tue→L, Wed/Thu/Fri→L+LL
+// Week2+: Mon→L+LL+LLL, Tue~Fri→L+LLL
+function getReviewLabel(weekNum: number, dayIndex: number): string {
+  const isOddWeek = weekNum % 2 === 1; // 第1、3週同模式；第2、4週同模式
+  if (isOddWeek) {
+    return dayIndex <= 1 ? "L" : "L + LL";
+  }
+  return dayIndex === 0 ? "L + LL + LLL" : "L + LLL";
+}
+
 // ─── Notes store (per week-day) ────────────────────────────────────
 // Key: `${year}/${weekIndex}/${dayKey}`
 const notesStore = reactive<Record<string, Note[]>>({});
@@ -295,11 +313,12 @@ const DAY_DEFS: Omit<DayData, "notes">[] = [
 ];
 
 const days = computed<DayData[]>(() =>
-  DAY_DEFS.map((d) => ({
+  DAY_DEFS.map((d, i) => ({
     ...d,
     notes:
       notesStore[noteKey(selectedYear.value, selectedWeekIndex.value, d.key)] ??
       [],
+    reviewLabel: getReviewLabel(weekOfMonth.value, i),
   })),
 );
 
