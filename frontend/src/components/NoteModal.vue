@@ -157,8 +157,8 @@ function handleDelete() {
     0 24px 64px rgba(0, 0, 0, 0.18),
     0 8px 24px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 1080px;
-  height: 700px;
+  max-width: 1580px;
+  height: 1000px;
   max-height: 90dvh;
   display: flex;
   flex-direction: column;
