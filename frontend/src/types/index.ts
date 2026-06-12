@@ -21,7 +21,10 @@ export type NoteTag =
   | "TODO"
   | "測試"
   | "SQLAlchemy"
-  | "Pydantic";
+  | "Pydantic"
+  | "C#"
+  | "ASP.NET"
+  | "WinForm";
 
 export const NOTE_TAGS: NoteTag[] = [
   "JS",
@@ -38,6 +41,9 @@ export const NOTE_TAGS: NoteTag[] = [
   "SQLModel",
   "SQLAlchemy",
   "Pydantic",
+  "C#",
+  "ASP.NET",
+  "WinForm",
   "TailWind",
   "PostgreSQL",
   "Leetcode",
@@ -76,6 +82,9 @@ export const TAG_COLORS: Record<
   測試: { bg: "#F0FDF4", text: "#166534", border: "#4ADE80" },
   SQLAlchemy: { bg: "#FEF3C7", text: "#78350F", border: "#F59E0B" },
   Pydantic: { bg: "#EDE9FE", text: "#4C1D95", border: "#8B5CF6" },
+  "C#": { bg: "#FDF0FF", text: "#7B1FA2", border: "#CE93D8" },
+  "ASP.NET": { bg: "#E3F2FD", text: "#0D47A1", border: "#1976D2" },
+  WinForm: { bg: "#ECEFF1", text: "#37474F", border: "#78909C" },
 };
 
 export interface Note {
