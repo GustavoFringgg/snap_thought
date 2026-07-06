@@ -24,7 +24,8 @@ export type NoteTag =
   | "Pydantic"
   | "C#"
   | "ASP.NET"
-  | "WinForm";
+  | "WinForm"
+  | "半導體";
 
 export const NOTE_TAGS: NoteTag[] = [
   "JS",
@@ -44,6 +45,7 @@ export const NOTE_TAGS: NoteTag[] = [
   "C#",
   "ASP.NET",
   "WinForm",
+  "半導體",
   "TailWind",
   "PostgreSQL",
   "Leetcode",
@@ -85,6 +87,7 @@ export const TAG_COLORS: Record<
   "C#": { bg: "#FDF0FF", text: "#7B1FA2", border: "#CE93D8" },
   "ASP.NET": { bg: "#E3F2FD", text: "#0D47A1", border: "#1976D2" },
   WinForm: { bg: "#ECEFF1", text: "#37474F", border: "#78909C" },
+  半導體: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" },
 };
 
 export interface Note {

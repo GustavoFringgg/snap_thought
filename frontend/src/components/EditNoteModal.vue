@@ -43,18 +43,20 @@
               <span class="modal__tags-label">
                 標籤 <span class="modal__tags-hint">（最多 2 個）</span>
               </span>
-              <button
-                v-for="t in NOTE_TAGS"
-                :key="t"
-                class="modal__tag-chip"
-                :class="{
-                  'modal__tag-chip--active': selectedTags.includes(t),
-                  'modal__tag-chip--disabled': !selectedTags.includes(t) && selectedTags.length >= 2
-                }"
-                :style="selectedTags.includes(t) ? `background:${TAG_COLORS[t].bg};color:${TAG_COLORS[t].text};border-color:${TAG_COLORS[t].border}` : ''"
-                :disabled="!selectedTags.includes(t) && selectedTags.length >= 2"
-                @click="toggleTag(t)"
-              >{{ t }}</button>
+              <div class="modal__tags-scroll">
+                <button
+                  v-for="t in NOTE_TAGS"
+                  :key="t"
+                  class="modal__tag-chip"
+                  :class="{
+                    'modal__tag-chip--active': selectedTags.includes(t),
+                    'modal__tag-chip--disabled': !selectedTags.includes(t) && selectedTags.length >= 2
+                  }"
+                  :style="selectedTags.includes(t) ? `background:${TAG_COLORS[t].bg};color:${TAG_COLORS[t].text};border-color:${TAG_COLORS[t].border}` : ''"
+                  :disabled="!selectedTags.includes(t) && selectedTags.length >= 2"
+                  @click="toggleTag(t)"
+                >{{ t }}</button>
+              </div>
             </div>
           </div>
 
@@ -229,10 +231,11 @@ function submit() {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .modal__tags-label {
+  flex-shrink: 0;
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-muted);
@@ -244,7 +247,18 @@ function submit() {
   font-size: 11px;
 }
 
+.modal__tags-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 2px 2px 4px;
+  min-width: 0;
+}
+
 .modal__tag-chip {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 3px 10px;
   border: 1.5px solid var(--color-border);
   border-radius: 20px;

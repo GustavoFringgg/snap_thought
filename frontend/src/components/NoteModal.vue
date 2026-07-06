@@ -343,7 +343,7 @@ function handleDelete() {
 
 .modal__content :deep(hr) {
   border: none;
-  border-top: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-text-muted);
   margin: 1em 0;
 }
 

@@ -7,7 +7,7 @@
       </div>
 
       <!-- Tag filter chips -->
-      <div class="tag-page__filter-wrap">
+      <div class="tag-page__filter-wrap" ref="filterWrapRef" @wheel="onFilterWheel">
         <div class="tag-page__filter">
           <button
             class="tag-chip tag-chip--all"
@@ -199,6 +199,16 @@ import type { NoteTag, NoteWithContext, DayKey } from '../types'
 const props = withDefaults(defineProps<{ searchQuery?: string }>(), { searchQuery: '' })
 
 import { apiFetch } from '../utils/api'
+
+// ── Tag filter: convert vertical wheel scroll into horizontal ──────
+const filterWrapRef = ref<HTMLElement | null>(null)
+function onFilterWheel(e: WheelEvent) {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+  const el = filterWrapRef.value
+  if (!el || el.scrollWidth <= el.clientWidth) return
+  e.preventDefault()
+  el.scrollLeft += e.deltaY
+}
 
 // ── Day metadata ─────────────────────────────────────────────────
 const DAY_INFO: Record<DayKey, { label: string; colorVar: string }> = {
@@ -475,14 +485,24 @@ async function handleDelete(id: string) {
 /* ── Tag filter ── */
 .tag-page__filter-wrap {
   overflow-x: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
   margin: 0 -28px;
   padding: 0 28px;
   flex: 1;
+  min-width: 0;
 }
 
 .tag-page__filter-wrap::-webkit-scrollbar {
-  display: none;
+  height: 6px;
+}
+
+.tag-page__filter-wrap::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.tag-page__filter-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }
 
 .tag-page__filter {
@@ -1002,6 +1022,7 @@ async function handleDelete(id: string) {
     margin: 0 -16px;
     padding: 0 16px;
     flex: 1;
+    min-width: 0;
   }
 
   .tag-page__content {
