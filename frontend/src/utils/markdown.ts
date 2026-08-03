@@ -22,10 +22,21 @@ const highlightExt: TokenizerAndRendererExtension = {
   },
 };
 
+function highlightComments(escaped: string): string {
+  return escaped
+    .split("\n")
+    .map((line) => {
+      const idx = line.indexOf("//");
+      if (idx === -1) return line;
+      return `${line.slice(0, idx)}<span class="code-comment">${line.slice(idx)}</span>`;
+    })
+    .join("\n");
+}
+
 const renderer = {
   code({ text, lang }: { text: string; lang?: string }) {
     const langLabel = lang ? `<span class="code-lang">${lang}</span>` : "";
-    return `<pre>${langLabel}<code>${escapeHtml(text)}</code></pre>`;
+    return `<pre>${langLabel}<code>${highlightComments(escapeHtml(text))}</code></pre>`;
   },
 };
 

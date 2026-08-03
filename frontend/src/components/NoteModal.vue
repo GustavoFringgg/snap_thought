@@ -327,6 +327,10 @@ function handleDelete() {
   line-height: 1.2;
 }
 
+.modal__content :deep(.code-comment) {
+  color: #16a34a;
+}
+
 .modal__content :deep(blockquote) {
   border-left: 3px solid var(--day-color, var(--color-primary));
   margin: 0 0 0.75em;

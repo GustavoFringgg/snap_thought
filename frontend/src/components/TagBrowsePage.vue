@@ -736,6 +736,10 @@ async function handleDelete(id: string) {
   line-height: 1.5;
 }
 
+.random-panel__content :deep(.code-comment) {
+  color: #16a34a;
+}
+
 .random-panel__content :deep(mark.mark--yellow) {
   background: #fef08a;
   color: inherit;
