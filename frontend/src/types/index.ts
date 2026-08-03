@@ -25,7 +25,7 @@ export type NoteTag =
   | "C#"
   | "ASP.NET"
   | "WinForm"
-  | "半導體";
+  | "Nooka筆記"
 
 export const NOTE_TAGS: NoteTag[] = [
   "JS",
@@ -45,7 +45,7 @@ export const NOTE_TAGS: NoteTag[] = [
   "C#",
   "ASP.NET",
   "WinForm",
-  "半導體",
+  "Nooka筆記",
   "TailWind",
   "PostgreSQL",
   "Leetcode",
@@ -54,13 +54,10 @@ export const NOTE_TAGS: NoteTag[] = [
   "資料結構",
   "Claude筆記",
   "Others",
-  "TODO",
-];
+  "TODO"
+]
 
-export const TAG_COLORS: Record<
-  NoteTag,
-  { bg: string; text: string; border: string }
-> = {
+export const TAG_COLORS: Record<NoteTag, { bg: string; text: string; border: string }> = {
   JS: { bg: "#FFFBEB", text: "#92400E", border: "#FCD34D" },
   TS: { bg: "#DBEAFE", text: "#1E40AF", border: "#60A5FA" },
   Vue: { bg: "#D1FAE5", text: "#065F46", border: "#34D399" },
@@ -87,29 +84,29 @@ export const TAG_COLORS: Record<
   "C#": { bg: "#FDF0FF", text: "#7B1FA2", border: "#CE93D8" },
   "ASP.NET": { bg: "#E3F2FD", text: "#0D47A1", border: "#1976D2" },
   WinForm: { bg: "#ECEFF1", text: "#37474F", border: "#78909C" },
-  半導體: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" },
-};
+  Nooka筆記: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" }
+}
 
 export interface Note {
-  id: string;
-  content: string;
-  createdAt: string;
-  tags?: NoteTag[];
+  id: string
+  content: string
+  createdAt: string
+  tags?: NoteTag[]
 }
 
 export interface DayData {
-  key: "mon" | "tue" | "wed" | "thu" | "fri";
-  label: string;
-  shortLabel: string;
-  colorVar: string;
-  notes: Note[];
-  reviewLabel: string;
+  key: "mon" | "tue" | "wed" | "thu" | "fri"
+  label: string
+  shortLabel: string
+  colorVar: string
+  notes: Note[]
+  reviewLabel: string
 }
 
-export type DayKey = DayData["key"];
+export type DayKey = DayData["key"]
 
 export interface NoteWithContext extends Note {
-  year: number;
-  isoWeek: number;
-  dayKey: DayKey;
+  year: number
+  isoWeek: number
+  dayKey: DayKey
 }
