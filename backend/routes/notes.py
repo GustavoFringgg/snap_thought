@@ -3,13 +3,14 @@ from bson import ObjectId
 from datetime import datetime, timezone
 
 from database import notes_collection
-from models import NoteCreate, NoteUpdate, NoteResponse, WeekNotesResponse, NoteWithContext, TagNotesResponse
+from models import NoteCreate, NoteUpdate, NoteResponse, WeekNotesResponse, NoteWithContext, TagNotesResponse, ReviewStageUpdate
 from auth import verify_token
 from typing import Optional
 
 router = APIRouter(prefix="/api/v1/notes", tags=["notes"], dependencies=[Depends(verify_token)])
 
 DAY_KEYS = ["mon", "tue", "wed", "thu", "fri"]
+REVIEW_STAGES = ["L", "LL", "LLL"]
 
 
 def doc_to_response(doc: dict) -> NoteResponse:
@@ -19,7 +20,32 @@ def doc_to_response(doc: dict) -> NoteResponse:
         createdAt=doc["createdAt"],
         updatedAt=doc.get("updatedAt"),
         tags=doc.get("tags"),
+        reviewStage=doc.get("reviewStage"),
     )
+
+
+def doc_to_context(doc: dict) -> NoteWithContext:
+    return NoteWithContext(
+        id=str(doc["_id"]),
+        content=doc["content"],
+        createdAt=doc["createdAt"],
+        updatedAt=doc.get("updatedAt"),
+        tags=doc.get("tags"),
+        reviewStage=doc.get("reviewStage"),
+        year=doc["year"],
+        isoWeek=doc["isoWeek"],
+        dayKey=doc["dayKey"],
+    )
+
+
+def advance_review_stage(current: Optional[str]) -> str:
+    if current not in REVIEW_STAGES:
+        return "L"
+    if current == "L":
+        return "LL"
+    if current == "LL":
+        return "LLL"
+    return "L"
 
 
 @router.get("", response_model=WeekNotesResponse)
@@ -50,6 +76,7 @@ async def create_note(body: NoteCreate):
         "dayKey": body.dayKey,
         "content": body.content,
         "tags": body.tags,
+        "reviewStage": None,
         "createdAt": now,
         "updatedAt": now,
     }
@@ -60,20 +87,45 @@ async def create_note(body: NoteCreate):
 
 
 @router.get("/random", response_model=NoteWithContext)
-async def get_random_note():
-    pipeline = [{"$sample": {"size": 1}}]
+async def get_random_note(stages: Optional[str] = Query(None), date: Optional[str] = Query(None)):
+    pipeline = []
+    if stages:
+        stage_list = [s for s in stages.split(",") if s in REVIEW_STAGES]
+        if stage_list:
+            pipeline.append({"$match": {"reviewStage": {"$in": stage_list}}})
+    if date:
+        pipeline.append({"$match": {"lastReviewedDate": {"$ne": date}}})
+    pipeline.append({"$sample": {"size": 1}})
+
     async for doc in notes_collection.aggregate(pipeline):
-        return NoteWithContext(
-            id=str(doc["_id"]),
-            content=doc["content"],
-            createdAt=doc["createdAt"],
-            updatedAt=doc.get("updatedAt"),
-            tags=doc.get("tags"),
-            year=doc["year"],
-            isoWeek=doc["isoWeek"],
-            dayKey=doc["dayKey"],
-        )
-    raise HTTPException(status_code=404, detail="No notes found")
+        return doc_to_context(doc)
+    raise HTTPException(status_code=404, detail="No notes found for today's review schedule")
+
+
+@router.patch("/{note_id}/review-stage", response_model=NoteWithContext)
+async def update_review_stage(note_id: str, body: ReviewStageUpdate):
+    if not ObjectId.is_valid(note_id):
+        raise HTTPException(status_code=400, detail="Invalid note_id")
+    if body.action not in ("advance", "reset"):
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    doc = await notes_collection.find_one({"_id": ObjectId(note_id)})
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    if body.action == "reset":
+        new_stage = None
+        last_reviewed_date = None
+    else:
+        new_stage = advance_review_stage(doc.get("reviewStage"))
+        last_reviewed_date = body.todayDate
+
+    result = await notes_collection.find_one_and_update(
+        {"_id": ObjectId(note_id)},
+        {"$set": {"reviewStage": new_stage, "lastReviewedDate": last_reviewed_date}},
+        return_document=True,
+    )
+    return doc_to_context(result)
 
 
 @router.get("/by-tag", response_model=TagNotesResponse)
@@ -86,19 +138,9 @@ async def get_notes_by_tag(tag: Optional[str] = Query(None)):
     cursor = notes_collection.find(query).sort("createdAt", -1)
     notes = []
     async for doc in cursor:
-        tags = doc.get("tags")
-        if not tags:
+        if not doc.get("tags"):
             continue
-        notes.append(NoteWithContext(
-            id=str(doc["_id"]),
-            content=doc["content"],
-            createdAt=doc["createdAt"],
-            updatedAt=doc.get("updatedAt"),
-            tags=tags,
-            year=doc["year"],
-            isoWeek=doc["isoWeek"],
-            dayKey=doc["dayKey"],
-        ))
+        notes.append(doc_to_context(doc))
 
     return TagNotesResponse(total=len(notes), notes=notes)
 
@@ -125,6 +167,15 @@ async def update_note(note_id: str, body: NoteUpdate):
         fields["content"] = body.content
     if body.tags is not None:
         fields["tags"] = body.tags if body.tags else None
+
+    if body.inReviewCycle is not None:
+        if body.inReviewCycle:
+            doc = await notes_collection.find_one({"_id": ObjectId(note_id)})
+            if doc is None:
+                raise HTTPException(status_code=404, detail="Note not found")
+            fields["reviewStage"] = doc.get("reviewStage") or "L"
+        else:
+            fields["reviewStage"] = None
 
     result = await notes_collection.find_one_and_update(
         {"_id": ObjectId(note_id)},

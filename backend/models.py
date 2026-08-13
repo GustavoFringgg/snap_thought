@@ -14,6 +14,12 @@ class NoteCreate(BaseModel):
 class NoteUpdate(BaseModel):
     content: Optional[str] = None
     tags: Optional[List[str]] = None
+    inReviewCycle: Optional[bool] = None
+
+
+class ReviewStageUpdate(BaseModel):
+    action: str  # "advance" | "reset"
+    todayDate: Optional[str] = None  # YYYY-MM-DD, caller's local date
 
 
 class NoteResponse(BaseModel):
@@ -22,6 +28,7 @@ class NoteResponse(BaseModel):
     createdAt: str
     updatedAt: Optional[str] = None
     tags: Optional[List[str]] = None
+    reviewStage: Optional[str] = None
 
 
 class WeekNotesResponse(BaseModel):
@@ -36,6 +43,7 @@ class NoteWithContext(BaseModel):
     createdAt: str
     updatedAt: Optional[str] = None
     tags: Optional[List[str]] = None
+    reviewStage: Optional[str] = None
     year: int
     isoWeek: int
     dayKey: str

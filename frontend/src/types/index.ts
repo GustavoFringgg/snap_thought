@@ -87,11 +87,14 @@ export const TAG_COLORS: Record<NoteTag, { bg: string; text: string; border: str
   Nooka筆記: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" }
 }
 
+export type ReviewStage = "L" | "LL" | "LLL"
+
 export interface Note {
   id: string
   content: string
   createdAt: string
   tags?: NoteTag[]
+  reviewStage?: ReviewStage | null
 }
 
 export interface DayData {

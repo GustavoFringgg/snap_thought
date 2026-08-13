@@ -124,7 +124,10 @@
     <!-- Random review panel -->
     <aside class="random-panel">
       <div class="random-panel__header">
-        <span class="random-panel__title">隨機複習</span>
+        <div class="random-panel__header-text">
+          <span class="random-panel__title">隨機複習</span>
+          <span class="random-panel__schedule">今天複習：{{ todayReviewLabel }}</span>
+        </div>
         <button class="random-panel__btn" :disabled="randomLoading" @click="fetchRandomNote" aria-label="再隨機一次">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" :class="{ 'spinning': randomLoading }">
             <path d="M13 2.5A6 6 0 1 1 7.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -138,7 +141,8 @@
       </div>
 
       <div v-else-if="!randomNote" class="random-panel__empty">
-        還沒有任何筆記
+        今天沒有符合複習排程的筆記<br />
+        <span class="random-panel__empty-hint">編輯筆記時勾選「加入複習循環」即可排入複習</span>
       </div>
 
       <div v-else class="random-panel__card">
@@ -149,6 +153,7 @@
               {{ DAY_INFO[randomNote.dayKey].label }}
             </span>
             <span class="random-panel__week">第 {{ randomNote.isoWeek }} 週・{{ randomNote.year }}</span>
+            <span v-if="randomNote.reviewStage" class="review-badge" :class="`review-badge--${randomNote.reviewStage.toLowerCase()}`">{{ randomNote.reviewStage }}</span>
           </div>
           <!-- Tags -->
           <div v-if="randomNote.tags?.length" class="random-panel__tags">
@@ -161,6 +166,20 @@
           </div>
           <!-- Content -->
           <div class="random-panel__content markdown-body" v-html="renderedRandomContent"></div>
+        </div>
+
+        <!-- Review actions -->
+        <div class="random-panel__actions">
+          <button
+            class="random-panel__action-btn random-panel__action-btn--reset"
+            :disabled="reviewActionLoading"
+            @click="markReviewed('reset')"
+          >取消複習</button>
+          <button
+            class="random-panel__action-btn random-panel__action-btn--advance"
+            :disabled="reviewActionLoading"
+            @click="markReviewed('advance')"
+          >已複習</button>
         </div>
       </div>
     </aside>
@@ -195,6 +214,7 @@ import NoteModal from './NoteModal.vue'
 import EditNoteModal from './EditNoteModal.vue'
 import { NOTE_TAGS, TAG_COLORS } from '../types'
 import type { NoteTag, NoteWithContext, DayKey } from '../types'
+import { getTodayReviewStages, getReviewLabel, getTodayDateString } from '../utils/reviewSchedule'
 
 const props = withDefaults(defineProps<{ searchQuery?: string }>(), { searchQuery: '' })
 
@@ -235,6 +255,12 @@ const selectedNote = ref<NoteWithContext | null>(null)
 const editingNote = ref<NoteWithContext | null>(null)
 const randomNote = ref<NoteWithContext | null>(null)
 const randomLoading = ref(false)
+const reviewActionLoading = ref(false)
+
+// ── Review schedule (today's actual date, independent of browsed week) ──
+const todayStages = getTodayReviewStages()
+const todayReviewLabel = getReviewLabel(todayStages)
+const todayDateStr = getTodayDateString()
 
 // ── Data fetching ────────────────────────────────────────────────
 async function fetchNotes() {
@@ -253,12 +279,37 @@ async function fetchNotes() {
 async function fetchRandomNote() {
   randomLoading.value = true
   try {
-    const res = await apiFetch(`/api/v1/notes/random`)
-    if (res.ok) randomNote.value = await res.json()
+    const res = await apiFetch(`/api/v1/notes/random?stages=${todayStages.join(',')}&date=${todayDateStr}`)
+    randomNote.value = res.ok ? await res.json() : null
   } catch (e) {
     console.error('Failed to fetch random note:', e)
+    randomNote.value = null
   } finally {
     randomLoading.value = false
+  }
+}
+
+async function markReviewed(action: 'advance' | 'reset') {
+  if (!randomNote.value) return
+  reviewActionLoading.value = true
+  const id = randomNote.value.id
+  try {
+    const res = await apiFetch(`/api/v1/notes/${id}/review-stage`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, todayDate: todayDateStr }),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      allNotes.value = allNotes.value.map(n =>
+        n.id === id ? { ...n, reviewStage: updated.reviewStage } : n
+      )
+    }
+    await fetchRandomNote()
+  } catch (e) {
+    console.error('Failed to update review stage:', e)
+  } finally {
+    reviewActionLoading.value = false
   }
 }
 
@@ -367,18 +418,19 @@ function handleEdit() {
   selectedNote.value = null
 }
 
-async function handleEditSubmit(content: string, tags: NoteTag[]) {
+async function handleEditSubmit(content: string, tags: NoteTag[], inReviewCycle: boolean) {
   if (!editingNote.value) return
   const id = editingNote.value.id
   editingNote.value = null
   try {
-    await apiFetch(`/api/v1/notes/${id}`, {
+    const res = await apiFetch(`/api/v1/notes/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, tags: tags.length ? tags : undefined }),
+      body: JSON.stringify({ content, tags: tags.length ? tags : undefined, inReviewCycle }),
     })
+    const updated = await res.json()
     allNotes.value = allNotes.value.map(n =>
-      n.id === id ? { ...n, content, tags: tags.length ? tags : undefined } : n
+      n.id === id ? { ...n, content, tags: tags.length ? tags : undefined, reviewStage: updated.reviewStage } : n
     )
   } catch (e) {
     console.error('Failed to update note:', e)
@@ -581,10 +633,18 @@ async function handleDelete(id: string) {
 .random-panel__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   padding: 16px 20px 12px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
+}
+
+.random-panel__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .random-panel__title {
@@ -592,6 +652,12 @@ async function handleDelete(id: string) {
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: 0.2px;
+}
+
+.random-panel__schedule {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono, monospace);
 }
 
 .random-panel__btn {
@@ -633,15 +699,92 @@ async function handleDelete(id: string) {
   text-align: center;
   font-size: 13px;
   color: var(--color-text-muted);
+  line-height: 1.8;
+}
+
+.random-panel__empty-hint {
+  font-size: 12px;
+  opacity: 0.75;
 }
 
 .random-panel__card {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+}
+
+.random-panel__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.random-panel__action-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.random-panel__action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.random-panel__action-btn--reset {
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.random-panel__action-btn--reset:hover:not(:disabled) {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.random-panel__action-btn--advance {
+  border: none;
+  background: var(--color-primary);
+  color: white;
+}
+
+.random-panel__action-btn--advance:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.review-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  font-family: var(--font-mono, monospace);
+}
+
+.review-badge--l {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.review-badge--ll {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+
+.review-badge--lll {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
 }
 
 .random-panel__card-inner {

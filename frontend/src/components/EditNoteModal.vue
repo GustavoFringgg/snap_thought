@@ -56,6 +56,13 @@
                 @click="toggleTag(t)"
               >{{ t }}</button>
             </div>
+
+            <!-- Review cycle toggle -->
+            <label class="modal__review-toggle">
+              <input type="checkbox" v-model="inReviewCycle" />
+              <span>加入複習循環</span>
+              <span v-if="props.note?.reviewStage" class="modal__review-stage-badge">{{ props.note.reviewStage }}</span>
+            </label>
           </div>
 
           <!-- Footer -->
@@ -89,11 +96,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  submit: [content: string, tags: NoteTag[]];
+  submit: [content: string, tags: NoteTag[], inReviewCycle: boolean];
 }>();
 
 const inputValue = ref("");
 const selectedTags = ref<NoteTag[]>([]);
+const inReviewCycle = ref(false);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
 watch(
@@ -102,6 +110,7 @@ watch(
     if (val && props.note) {
       inputValue.value = props.note.content;
       selectedTags.value = props.note.tags ? [...props.note.tags] : [];
+      inReviewCycle.value = !!props.note.reviewStage;
       await nextTick();
       textareaRef.value?.focus();
     }
@@ -127,7 +136,7 @@ function toggleTag(t: NoteTag) {
 function submit() {
   const content = inputValue.value.trim();
   if (!content) return;
-  emit("submit", content, selectedTags.value);
+  emit("submit", content, selectedTags.value, inReviewCycle.value);
   emit("close");
 }
 </script>
@@ -269,6 +278,36 @@ function submit() {
 .modal__tag-chip--disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.modal__review-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
+}
+
+.modal__review-toggle input {
+  accent-color: var(--day-color, var(--color-primary));
+  cursor: pointer;
+}
+
+.modal__review-stage-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  font-family: var(--font-mono, monospace);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
 .modal__textarea {

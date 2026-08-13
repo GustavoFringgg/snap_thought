@@ -152,6 +152,7 @@ import TagBrowsePage from "./components/TagBrowsePage.vue";
 import DayCard from "./components/DayCard.vue";
 import LoginPage from "./components/LoginPage.vue";
 import { apiFetch, isAuthenticated, clearToken } from "./utils/api";
+import { getWeekOfMonth, getReviewStages, getReviewLabel } from "./utils/reviewSchedule";
 import type { DayData, DayKey, Note, NoteTag } from "./types";
 
 // ─── Auth ──────────────────────────────────────────────────────────
@@ -286,18 +287,8 @@ watch(selectedYear, () => {
 const weekOfMonth = computed(() => {
   const monday = selectedWeek.value?.monday;
   if (!monday) return 1;
-  return Math.min(Math.ceil(monday.getDate() / 7), 4);
+  return getWeekOfMonth(monday);
 });
-
-// Week1: Mon/Tue→L, Wed/Thu/Fri→L+LL
-// Week2+: Mon→L+LL+LLL, Tue~Fri→L+LLL
-function getReviewLabel(weekNum: number, dayIndex: number): string {
-  const isOddWeek = weekNum % 2 === 1; // 第1、3週同模式；第2、4週同模式
-  if (isOddWeek) {
-    return dayIndex <= 1 ? "L" : "L + LL";
-  }
-  return dayIndex === 0 ? "L + LL + LLL" : "L + LLL";
-}
 
 // ─── Notes store (per week-day) ────────────────────────────────────
 // Key: `${year}/${weekIndex}/${dayKey}`
@@ -337,7 +328,7 @@ const days = computed<DayData[]>(() =>
     notes:
       notesStore[noteKey(selectedYear.value, selectedWeekIndex.value, d.key)] ??
       [],
-    reviewLabel: getReviewLabel(weekOfMonth.value, i),
+    reviewLabel: getReviewLabel(getReviewStages(weekOfMonth.value, i)),
   })),
 );
 
@@ -488,16 +479,17 @@ async function handleDeleteNote(dayKey: DayKey, noteId: string) {
   }
 }
 
-async function handleUpdateNote(dayKey: DayKey, noteId: string, content: string, tags: NoteTag[]) {
+async function handleUpdateNote(dayKey: DayKey, noteId: string, content: string, tags: NoteTag[], inReviewCycle: boolean) {
   try {
-    await apiFetch(`/api/v1/notes/${noteId}`, {
+    const res = await apiFetch(`/api/v1/notes/${noteId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, tags: tags.length ? tags : undefined }),
+      body: JSON.stringify({ content, tags: tags.length ? tags : undefined, inReviewCycle }),
     });
+    const updated: Note = await res.json();
     const key = noteKey(selectedYear.value, selectedWeekIndex.value, dayKey);
     notesStore[key] = (notesStore[key] ?? []).map((n) =>
-      n.id === noteId ? { ...n, content, tags: tags.length ? tags : undefined } : n,
+      n.id === noteId ? { ...n, content, tags: tags.length ? tags : undefined, reviewStage: updated.reviewStage } : n,
     );
   } catch (e) {
     console.error("Failed to update note:", e);
@@ -506,6 +498,9 @@ async function handleUpdateNote(dayKey: DayKey, noteId: string, content: string,
 
 // ─── Fetch on week change ───────────────────────────────────────────
 watch([selectedYear, selectedWeekIndex], fetchWeekNotes);
+watch(currentView, (view) => {
+  if (view === "week") fetchWeekNotes();
+});
 onMounted(fetchWeekNotes);
 </script>
 

@@ -127,7 +127,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   "add-note": [dayKey: DayData["key"], content: string, tags: NoteTag[]];
   "delete-note": [dayKey: DayData["key"], noteId: string];
-  "update-note": [dayKey: DayData["key"], noteId: string, content: string, tags: NoteTag[]];
+  "update-note": [dayKey: DayData["key"], noteId: string, content: string, tags: NoteTag[], inReviewCycle: boolean];
 }>();
 
 const showAddModal = ref(false);
@@ -160,9 +160,9 @@ function closeEditModal() {
   editingNote.value = null;
 }
 
-function updateNote(content: string, tags: NoteTag[]) {
+function updateNote(content: string, tags: NoteTag[], inReviewCycle: boolean) {
   if (!editingNote.value) return;
-  emit("update-note", props.day.key, editingNote.value.id, content, tags);
+  emit("update-note", props.day.key, editingNote.value.id, content, tags, inReviewCycle);
 }
 </script>
 
