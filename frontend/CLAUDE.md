@@ -40,20 +40,20 @@ frontend/
 // src/types/index.ts
 
 export interface Note {
-  id: string          // UUID 或 MongoDB ObjectId 字串
-  content: string     // 筆記內容（可包含 code、多行文字）
-  createdAt: string   // ISO 8601 格式，e.g. "2026-03-27T14:30:00.000Z"
+  id: string // UUID 或 MongoDB ObjectId 字串
+  content: string // 筆記內容（可包含 code、多行文字）
+  createdAt: string // ISO 8601 格式，e.g. "2026-03-27T14:30:00.000Z"
 }
 
 export interface DayData {
-  key: 'mon' | 'tue' | 'wed' | 'thu' | 'fri'  // 星期幾的識別鍵
-  label: string       // 顯示用中文，e.g. "星期一"
-  shortLabel: string  // 手機版縮寫，e.g. "一"
-  colorVar: string    // CSS 變數名稱，e.g. "--color-monday"（前端專用，後端不需儲存）
-  notes: Note[]       // 該天的筆記列表
+  key: "mon" | "tue" | "wed" | "thu" | "fri" // 星期幾的識別鍵
+  label: string // 顯示用中文，e.g. "星期一"
+  shortLabel: string // 手機版縮寫，e.g. "一"
+  colorVar: string // CSS 變數名稱，e.g. "--color-monday"（前端專用，後端不需儲存）
+  notes: Note[] // 該天的筆記列表
 }
 
-export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri'
+export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri"
 ```
 
 ---
@@ -63,6 +63,7 @@ export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri'
 ### 核心概念：筆記以「週 + 天」為單位
 
 每一筆筆記屬於：
+
 - 某一**年份**（e.g. 2026）
 - 某一**週**（以 ISO 週次或該年的第幾個工作週為識別）
 - 某一**天**（`mon` / `tue` / `wed` / `thu` / `fri`）
@@ -91,6 +92,7 @@ export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri'
 ```
 
 **索引建議：**
+
 ```js
 db.notes.createIndex({ year: 1, isoWeek: 1, dayKey: 1 })
 ```
@@ -108,6 +110,7 @@ GET /api/v1/notes?year=2026&week=13
 ```
 
 **Response（200）：**
+
 ```json
 {
   "year": 2026,
@@ -137,6 +140,7 @@ POST /api/v1/notes
 ```
 
 **Request Body：**
+
 ```json
 {
   "year": 2026,
@@ -147,6 +151,7 @@ POST /api/v1/notes
 ```
 
 **Response（201）：**
+
 ```json
 {
   "id": "abc123",
@@ -174,6 +179,7 @@ PATCH /api/v1/notes/{note_id}
 ```
 
 **Request Body：**
+
 ```json
 {
   "content": "更新後的筆記內容"
@@ -181,6 +187,7 @@ PATCH /api/v1/notes/{note_id}
 ```
 
 **Response（200）：**
+
 ```json
 {
   "id": "abc123",
@@ -225,7 +232,7 @@ async function handleAddNote(dayKey: DayKey, content: string) {
 ```typescript
 // 改成（API）
 async function handleDeleteNote(dayKey: DayKey, noteId: string) {
-  await fetch(`/api/v1/notes/${noteId}`, { method: 'DELETE' })
+  await fetch(`/api/v1/notes/${noteId}`, { method: "DELETE" })
   // 更新本地 store...
 }
 ```
@@ -249,11 +256,11 @@ watch([selectedYear, selectedWeekIndex], async () => {
 2. **`dayKey` 對應**：
    | dayKey | 星期 |
    |--------|------|
-   | `mon`  | 星期一 |
-   | `tue`  | 星期二 |
-   | `wed`  | 星期三 |
-   | `thu`  | 星期四 |
-   | `fri`  | 星期五 |
+   | `mon` | 星期一 |
+   | `tue` | 星期二 |
+   | `wed` | 星期三 |
+   | `thu` | 星期四 |
+   | `fri` | 星期五 |
 
 3. **`colorVar` 欄位**：這是前端純 CSS 用的（`--color-monday` 等），**後端不需要儲存**。
 
@@ -273,19 +280,20 @@ npm run dev
 
 # 後端啟動（建議）
 cd backend
-uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8000
 # → http://localhost:8000
 ```
 
 **Vite Proxy 設定（前端開發用）：**
 在 `frontend/vite.config.ts` 加入：
+
 ```typescript
 export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
-    },
-  },
+      "/api": "http://localhost:8000"
+    }
+  }
 })
 ```

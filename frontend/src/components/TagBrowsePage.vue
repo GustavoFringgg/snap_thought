@@ -1,10 +1,8 @@
 <template>
   <div class="tag-page">
-
     <!-- Page header -->
     <div class="tag-page__header">
-      <div class="tag-page__header-inner">
-      </div>
+      <div class="tag-page__header-inner"></div>
 
       <!-- Tag filter chips -->
       <div class="tag-page__filter-wrap" ref="filterWrapRef" @wheel="onFilterWheel">
@@ -22,9 +20,11 @@
             :key="stat.name"
             class="tag-chip"
             :class="{ 'tag-chip--active': selectedTag === stat.name }"
-            :style="selectedTag === stat.name
-              ? `background:${TAG_COLORS[stat.name].bg};color:${TAG_COLORS[stat.name].text};border-color:${TAG_COLORS[stat.name].border}`
-              : `--chip-border:${TAG_COLORS[stat.name].border};--chip-text:${TAG_COLORS[stat.name].text}`"
+            :style="
+              selectedTag === stat.name
+                ? `background:${TAG_COLORS[stat.name].bg};color:${TAG_COLORS[stat.name].text};border-color:${TAG_COLORS[stat.name].border}`
+                : `--chip-border:${TAG_COLORS[stat.name].border};--chip-text:${TAG_COLORS[stat.name].text}`
+            "
             @click="selectedTag = selectedTag === stat.name ? null : stat.name"
           >
             {{ stat.name }}
@@ -36,155 +36,196 @@
 
     <!-- Body: note list + random panel -->
     <div class="tag-page__body">
-
-    <!-- Content -->
-    <div class="tag-page__content">
-
-      <!-- Loading -->
-      <div v-if="loading" class="tag-page__loading">
-        <div class="spinner"></div>
-        <span>載入中...</span>
-      </div>
-
-      <!-- Empty: no tagged notes at all -->
-      <div v-else-if="allNotes.length === 0" class="tag-page__empty">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-          <rect x="4" y="4" width="48" height="48" rx="12" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <path d="M18 28h20M18 34h14M18 22h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M34 14l8 8-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-        </svg>
-        <p class="tag-page__empty-title">還沒有任何標籤</p>
-        <p class="tag-page__empty-sub">新增筆記時幫它貼上標籤，就可以在這裡快速篩選</p>
-      </div>
-
-      <!-- Empty: selected tag has no results -->
-      <div v-else-if="filteredNotes.length === 0" class="tag-page__empty">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-          <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <path d="M20 28h16M26 22l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-        </svg>
-        <p class="tag-page__empty-title">沒有「{{ selectedTag }}」的筆記</p>
-        <p class="tag-page__empty-sub">試試選擇其他標籤，或回到筆記新增標籤</p>
-      </div>
-
-      <!-- Results -->
-      <template v-else>
-        <!-- Grouped notes -->
-        <div
-          v-for="group in groupedNotes"
-          :key="group.key"
-          class="note-group"
-        >
-          <!-- Week separator -->
-          <div class="note-group__header">
-            <div class="note-group__line"></div>
-            <div class="note-group__label">
-              <span class="note-group__week">第 {{ group.isoWeek }} 週</span>
-              <span class="note-group__dot">·</span>
-              <span class="note-group__range">{{ group.dateRange }}</span>
-              <span class="note-group__year">{{ group.year }}</span>
-            </div>
-            <div class="note-group__line"></div>
-          </div>
-
-          <!-- Note cards -->
-          <div class="note-group__list">
-            <div
-              v-for="note in group.notes"
-              :key="note.id"
-              class="browse-card"
-              :style="`--day-color: var(${DAY_INFO[note.dayKey].colorVar})`"
-              @click="openNote(note)"
-            >
-              <div class="browse-card__bar"></div>
-              <div class="browse-card__body">
-                <div class="browse-card__meta">
-                  <span v-if="note.tags && note.tags.length" class="browse-card__tags">
-                    <span
-                      v-for="tag in note.tags"
-                      :key="tag"
-                      class="browse-card__tag"
-                      :style="tagStyle(tag)"
-                    >{{ tag }}</span>
-                  </span>
-                </div>
-                <p class="browse-card__content">{{ truncate(note.content) }}</p>
-              </div>
-              <div class="browse-card__arrow">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </div>
-          </div>
+      <!-- Content -->
+      <div class="tag-page__content">
+        <!-- Loading -->
+        <div v-if="loading" class="tag-page__loading">
+          <div class="spinner"></div>
+          <span>載入中...</span>
         </div>
-      </template>
-    </div>
 
-    <!-- Random review panel -->
-    <aside class="random-panel">
-      <div class="random-panel__header">
-        <div class="random-panel__header-text">
-          <span class="random-panel__title">隨機複習</span>
-          <span class="random-panel__schedule">今天複習：{{ todayReviewLabel }}</span>
-        </div>
-        <button class="random-panel__btn" :disabled="randomLoading" @click="fetchRandomNote" aria-label="再隨機一次">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" :class="{ 'spinning': randomLoading }">
-            <path d="M13 2.5A6 6 0 1 1 7.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M13 2.5V6M13 2.5H9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Empty: no tagged notes at all -->
+        <div v-else-if="allNotes.length === 0" class="tag-page__empty">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+            <rect
+              x="4"
+              y="4"
+              width="48"
+              height="48"
+              rx="12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <path d="M18 28h20M18 34h14M18 22h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <path
+              d="M34 14l8 8-8 8"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0.4"
+            />
           </svg>
-        </button>
-      </div>
-
-      <div v-if="randomLoading" class="random-panel__loading">
-        <div class="spinner"></div>
-      </div>
-
-      <div v-else-if="!randomNote" class="random-panel__empty">
-        今天沒有符合複習排程的筆記<br />
-        <span class="random-panel__empty-hint">編輯筆記時勾選「加入複習循環」即可排入複習</span>
-      </div>
-
-      <div v-else class="random-panel__card">
-        <div class="random-panel__card-inner">
-          <!-- Meta -->
-          <div class="random-panel__meta">
-            <span class="random-panel__day" :style="`color: var(${DAY_INFO[randomNote.dayKey].colorVar})`">
-              {{ DAY_INFO[randomNote.dayKey].label }}
-            </span>
-            <span class="random-panel__week">第 {{ randomNote.isoWeek }} 週・{{ randomNote.year }}</span>
-            <span v-if="randomNote.reviewStage" class="review-badge" :class="`review-badge--${randomNote.reviewStage.toLowerCase()}`">{{ randomNote.reviewStage }}</span>
-          </div>
-          <!-- Tags -->
-          <div v-if="randomNote.tags?.length" class="random-panel__tags">
-            <span
-              v-for="tag in randomNote.tags"
-              :key="tag"
-              class="random-panel__tag"
-              :style="tagStyle(tag)"
-            >{{ tag }}</span>
-          </div>
-          <!-- Content -->
-          <div class="random-panel__content markdown-body" v-html="renderedRandomContent"></div>
+          <p class="tag-page__empty-title">還沒有任何標籤</p>
+          <p class="tag-page__empty-sub">新增筆記時幫它貼上標籤，就可以在這裡快速篩選</p>
         </div>
 
-        <!-- Review actions -->
-        <div class="random-panel__actions">
-          <button
-            class="random-panel__action-btn random-panel__action-btn--reset"
-            :disabled="reviewActionLoading"
-            @click="markReviewed('reset')"
-          >取消複習</button>
-          <button
-            class="random-panel__action-btn random-panel__action-btn--advance"
-            :disabled="reviewActionLoading"
-            @click="markReviewed('advance')"
-          >已複習</button>
+        <!-- Empty: selected tag has no results -->
+        <div v-else-if="filteredNotes.length === 0" class="tag-page__empty">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+            <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3" />
+            <path
+              d="M20 28h16M26 22l6 6-6 6"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0.4"
+            />
+          </svg>
+          <p class="tag-page__empty-title">沒有「{{ selectedTag }}」的筆記</p>
+          <p class="tag-page__empty-sub">試試選擇其他標籤，或回到筆記新增標籤</p>
         </div>
-      </div>
-    </aside>
 
-    </div><!-- end tag-page__body -->
+        <!-- Results -->
+        <template v-else>
+          <!-- Grouped notes -->
+          <div v-for="group in groupedNotes" :key="group.key" class="note-group">
+            <!-- Week separator -->
+            <div class="note-group__header">
+              <div class="note-group__line"></div>
+              <div class="note-group__label">
+                <span class="note-group__week">第 {{ group.isoWeek }} 週</span>
+                <span class="note-group__dot">·</span>
+                <span class="note-group__range">{{ group.dateRange }}</span>
+                <span class="note-group__year">{{ group.year }}</span>
+              </div>
+              <div class="note-group__line"></div>
+            </div>
+
+            <!-- Note cards -->
+            <div class="note-group__list">
+              <div
+                v-for="note in group.notes"
+                :key="note.id"
+                class="browse-card"
+                :style="`--day-color: var(${DAY_INFO[note.dayKey].colorVar})`"
+                @click="openNote(note)"
+              >
+                <div class="browse-card__bar"></div>
+                <div class="browse-card__body">
+                  <div class="browse-card__meta">
+                    <span v-if="note.tags && note.tags.length" class="browse-card__tags">
+                      <span v-for="tag in note.tags" :key="tag" class="browse-card__tag" :style="tagStyle(tag)">
+                        {{ tag }}
+                      </span>
+                    </span>
+                  </div>
+                  <p class="browse-card__content">{{ truncate(note.content) }}</p>
+                </div>
+                <div class="browse-card__arrow">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d="M5 3l4 4-4 4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Random review panel -->
+      <aside class="random-panel">
+        <div class="random-panel__header">
+          <div class="random-panel__header-text">
+            <span class="random-panel__title">隨機複習</span>
+            <span class="random-panel__schedule">今天複習：{{ todayReviewLabel }}</span>
+          </div>
+          <button class="random-panel__btn" :disabled="randomLoading" @click="fetchRandomNote" aria-label="再隨機一次">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 15 15"
+              fill="none"
+              aria-hidden="true"
+              :class="{ spinning: randomLoading }"
+            >
+              <path d="M13 2.5A6 6 0 1 1 7.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              <path
+                d="M13 2.5V6M13 2.5H9.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="randomLoading" class="random-panel__loading">
+          <div class="spinner"></div>
+        </div>
+
+        <div v-else-if="!randomNote" class="random-panel__empty">
+          今天沒有符合複習排程的筆記
+          <br />
+          <span class="random-panel__empty-hint">編輯筆記時勾選「加入複習循環」即可排入複習</span>
+        </div>
+
+        <div v-else class="random-panel__card">
+          <div class="random-panel__card-inner">
+            <!-- Meta -->
+            <div class="random-panel__meta">
+              <span class="random-panel__day" :style="`color: var(${DAY_INFO[randomNote.dayKey].colorVar})`">
+                {{ DAY_INFO[randomNote.dayKey].label }}
+              </span>
+              <span class="random-panel__week">第 {{ randomNote.isoWeek }} 週・{{ randomNote.year }}</span>
+              <span
+                v-if="randomNote.reviewStage"
+                class="review-badge"
+                :class="`review-badge--${randomNote.reviewStage.toLowerCase()}`"
+              >
+                {{ randomNote.reviewStage }}
+              </span>
+            </div>
+            <!-- Tags -->
+            <div v-if="randomNote.tags?.length" class="random-panel__tags">
+              <span v-for="tag in randomNote.tags" :key="tag" class="random-panel__tag" :style="tagStyle(tag)">
+                {{ tag }}
+              </span>
+            </div>
+            <!-- Content -->
+            <div class="random-panel__content markdown-body" v-html="renderedRandomContent"></div>
+          </div>
+
+          <!-- Review actions -->
+          <div class="random-panel__actions">
+            <button
+              class="random-panel__action-btn random-panel__action-btn--reset"
+              :disabled="reviewActionLoading"
+              @click="markReviewed('reset')"
+            >
+              取消複習
+            </button>
+            <button
+              class="random-panel__action-btn random-panel__action-btn--advance"
+              :disabled="reviewActionLoading"
+              @click="markReviewed('advance')"
+            >
+              已複習
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <!-- end tag-page__body -->
 
     <!-- Note detail modal -->
     <NoteModal
@@ -208,17 +249,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, toRef } from 'vue'
-import { renderMarkdown } from '../utils/markdown'
-import NoteModal from './NoteModal.vue'
-import EditNoteModal from './EditNoteModal.vue'
-import { NOTE_TAGS, TAG_COLORS } from '../types'
-import type { NoteTag, NoteWithContext, DayKey } from '../types'
-import { getTodayReviewStages, getReviewLabel, getTodayDateString } from '../utils/reviewSchedule'
+import { ref, computed, onMounted, watch, toRef } from "vue"
+import { renderMarkdown } from "../utils/markdown"
+import NoteModal from "./NoteModal.vue"
+import EditNoteModal from "./EditNoteModal.vue"
+import { NOTE_TAGS, TAG_COLORS } from "../types"
+import type { NoteTag, NoteWithContext, DayKey } from "../types"
+import { getTodayReviewStages, getReviewLabel, getTodayDateString } from "../utils/reviewSchedule"
 
-const props = withDefaults(defineProps<{ searchQuery?: string }>(), { searchQuery: '' })
+const props = withDefaults(defineProps<{ searchQuery?: string }>(), { searchQuery: "" })
 
-import { apiFetch } from '../utils/api'
+import { apiFetch } from "../utils/api"
 
 // ── Tag filter: convert vertical wheel scroll into horizontal ──────
 const filterWrapRef = ref<HTMLElement | null>(null)
@@ -232,19 +273,19 @@ function onFilterWheel(e: WheelEvent) {
 
 // ── Day metadata ─────────────────────────────────────────────────
 const DAY_INFO: Record<DayKey, { label: string; colorVar: string }> = {
-  mon: { label: '星期一', colorVar: '--color-monday' },
-  tue: { label: '星期二', colorVar: '--color-tuesday' },
-  wed: { label: '星期三', colorVar: '--color-wednesday' },
-  thu: { label: '星期四', colorVar: '--color-thursday' },
-  fri: { label: '星期五', colorVar: '--color-friday' },
+  mon: { label: "星期一", colorVar: "--color-monday" },
+  tue: { label: "星期二", colorVar: "--color-tuesday" },
+  wed: { label: "星期三", colorVar: "--color-wednesday" },
+  thu: { label: "星期四", colorVar: "--color-thursday" },
+  fri: { label: "星期五", colorVar: "--color-friday" }
 }
 
 const DAY_COLORS: Record<DayKey, string> = {
-  mon: '#3B82F6',
-  tue: '#8B5CF6',
-  wed: '#10B981',
-  thu: '#F59E0B',
-  fri: '#EF4444',
+  mon: "#3B82F6",
+  tue: "#8B5CF6",
+  wed: "#10B981",
+  thu: "#F59E0B",
+  fri: "#EF4444"
 }
 
 // ── State ────────────────────────────────────────────────────────
@@ -270,7 +311,7 @@ async function fetchNotes() {
     const data = await res.json()
     allNotes.value = data.notes ?? []
   } catch (e) {
-    console.error('Failed to fetch tagged notes:', e)
+    console.error("Failed to fetch tagged notes:", e)
   } finally {
     loading.value = false
   }
@@ -279,46 +320,47 @@ async function fetchNotes() {
 async function fetchRandomNote() {
   randomLoading.value = true
   try {
-    const res = await apiFetch(`/api/v1/notes/random?stages=${todayStages.join(',')}&date=${todayDateStr}`)
+    const res = await apiFetch(`/api/v1/notes/random?stages=${todayStages.join(",")}&date=${todayDateStr}`)
     randomNote.value = res.ok ? await res.json() : null
   } catch (e) {
-    console.error('Failed to fetch random note:', e)
+    console.error("Failed to fetch random note:", e)
     randomNote.value = null
   } finally {
     randomLoading.value = false
   }
 }
 
-async function markReviewed(action: 'advance' | 'reset') {
+async function markReviewed(action: "advance" | "reset") {
   if (!randomNote.value) return
   reviewActionLoading.value = true
   const id = randomNote.value.id
   try {
     const res = await apiFetch(`/api/v1/notes/${id}/review-stage`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, todayDate: todayDateStr }),
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, todayDate: todayDateStr })
     })
     if (res.ok) {
       const updated = await res.json()
-      allNotes.value = allNotes.value.map(n =>
-        n.id === id ? { ...n, reviewStage: updated.reviewStage } : n
-      )
+      allNotes.value = allNotes.value.map((n) => (n.id === id ? { ...n, reviewStage: updated.reviewStage } : n))
     }
     await fetchRandomNote()
   } catch (e) {
-    console.error('Failed to update review stage:', e)
+    console.error("Failed to update review stage:", e)
   } finally {
     reviewActionLoading.value = false
   }
 }
 
 const renderedRandomContent = computed(() => {
-  if (!randomNote.value) return ''
+  if (!randomNote.value) return ""
   return renderMarkdown(randomNote.value.content)
 })
 
-onMounted(() => { fetchNotes(); fetchRandomNote() })
+onMounted(() => {
+  fetchNotes()
+  fetchRandomNote()
+})
 
 // ── Tag stats ────────────────────────────────────────────────────
 const tagStats = computed(() => {
@@ -330,20 +372,17 @@ const tagStats = computed(() => {
       }
     }
   }
-  return NOTE_TAGS
-    .filter(t => counts.has(t))
-    .map(t => ({ name: t as NoteTag, count: counts.get(t)! }))
+  return NOTE_TAGS.filter((t) => counts.has(t))
+    .map((t) => ({ name: t as NoteTag, count: counts.get(t)! }))
     .sort((a, b) => b.count - a.count)
 })
 
 // ── Filtered notes ───────────────────────────────────────────────
 const filteredNotes = computed(() => {
-  let notes = selectedTag.value
-    ? allNotes.value.filter(n => n.tags?.includes(selectedTag.value!))
-    : allNotes.value
+  let notes = selectedTag.value ? allNotes.value.filter((n) => n.tags?.includes(selectedTag.value!)) : allNotes.value
 
   const q = props.searchQuery.trim().toLowerCase()
-  if (q) notes = notes.filter(n => n.content.toLowerCase().includes(q))
+  if (q) notes = notes.filter((n) => n.content.toLowerCase().includes(q))
   return notes
 })
 
@@ -367,7 +406,7 @@ function getWeekRange(year: number, isoWeek: number): { monday: Date; friday: Da
 }
 
 function fmtDate(d: Date): string {
-  return d.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
+  return d.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" })
 }
 
 const groupedNotes = computed<NoteGroup[]>(() => {
@@ -381,7 +420,7 @@ const groupedNotes = computed<NoteGroup[]>(() => {
         year: note.year,
         isoWeek: note.isoWeek,
         dateRange: `${fmtDate(monday)} — ${fmtDate(friday)}`,
-        notes: [],
+        notes: []
       })
     }
     groups.get(key)!.notes.push(note)
@@ -395,14 +434,14 @@ const groupedNotes = computed<NoteGroup[]>(() => {
 // ── Helpers ──────────────────────────────────────────────────────
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
+  return d.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" })
 }
 
 function truncate(text: string, max = 100): string {
-  return text.length > max ? text.slice(0, max) + '…' : text
+  return text.length > max ? text.slice(0, max) + "…" : text
 }
 
-const FALLBACK_COLOR = { bg: '#F3F4F6', text: '#374151', border: '#D1D5DB' }
+const FALLBACK_COLOR = { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" }
 
 function tagStyle(tag: string): string {
   const c = TAG_COLORS[tag as NoteTag] ?? FALLBACK_COLOR
@@ -424,29 +463,28 @@ async function handleEditSubmit(content: string, tags: NoteTag[], inReviewCycle:
   editingNote.value = null
   try {
     const res = await apiFetch(`/api/v1/notes/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, tags: tags.length ? tags : undefined, inReviewCycle }),
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, tags: tags.length ? tags : undefined, inReviewCycle })
     })
     const updated = await res.json()
-    allNotes.value = allNotes.value.map(n =>
+    allNotes.value = allNotes.value.map((n) =>
       n.id === id ? { ...n, content, tags: tags.length ? tags : undefined, reviewStage: updated.reviewStage } : n
     )
   } catch (e) {
-    console.error('Failed to update note:', e)
+    console.error("Failed to update note:", e)
   }
 }
 
 async function handleDelete(id: string) {
   try {
-    await apiFetch(`/api/v1/notes/${id}`, { method: 'DELETE' })
-    allNotes.value = allNotes.value.filter(n => n.id !== id)
+    await apiFetch(`/api/v1/notes/${id}`, { method: "DELETE" })
+    allNotes.value = allNotes.value.filter((n) => n.id !== id)
     selectedNote.value = null
   } catch (e) {
-    console.error('Failed to delete note:', e)
+    console.error("Failed to delete note:", e)
   }
 }
-
 </script>
 
 <style scoped>
@@ -621,7 +659,7 @@ async function handleDelete(id: string) {
 
 /* ── Random panel ── */
 .random-panel {
-  flex: 0 0 55%;
+  flex: 0 0 75%;
   flex-shrink: 0;
   border-left: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -918,7 +956,9 @@ async function handleDelete(id: string) {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Empty state ── */
