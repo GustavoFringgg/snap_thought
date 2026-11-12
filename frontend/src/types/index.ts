@@ -34,6 +34,14 @@ export type NoteTag =
   | "職場與工具"
 
 export const NOTE_TAGS: NoteTag[] = [
+  "封裝大局",
+  "展機與展開",
+  "Alarm與解貨",
+  "參數與缺陷",
+  "SPC統計",
+  "職場與工具",
+  "TODO",
+  "Others",
   "JS",
   "TS",
   "HTML",
@@ -58,15 +66,7 @@ export const NOTE_TAGS: NoteTag[] = [
   "測試",
   "演算法",
   "資料結構",
-  "Claude筆記",
-  "Others",
-  "TODO",
-  "封裝大局",
-  "展機與展開",
-  "Alarm與解貨",
-  "參數與缺陷",
-  "SPC統計",
-  "職場與工具"
+  "Claude筆記"
 ]
 
 export const TAG_COLORS: Record<NoteTag, { bg: string; text: string; border: string }> = {
