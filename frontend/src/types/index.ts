@@ -26,6 +26,12 @@ export type NoteTag =
   | "ASP.NET"
   | "WinForm"
   | "Nooka筆記"
+  | "封裝大局"
+  | "展機與展開"
+  | "Alarm與解貨"
+  | "參數與缺陷"
+  | "SPC統計"
+  | "職場與工具"
 
 export const NOTE_TAGS: NoteTag[] = [
   "JS",
@@ -54,7 +60,13 @@ export const NOTE_TAGS: NoteTag[] = [
   "資料結構",
   "Claude筆記",
   "Others",
-  "TODO"
+  "TODO",
+  "封裝大局",
+  "展機與展開",
+  "Alarm與解貨",
+  "參數與缺陷",
+  "SPC統計",
+  "職場與工具"
 ]
 
 export const TAG_COLORS: Record<NoteTag, { bg: string; text: string; border: string }> = {
@@ -84,7 +96,13 @@ export const TAG_COLORS: Record<NoteTag, { bg: string; text: string; border: str
   "C#": { bg: "#FDF0FF", text: "#7B1FA2", border: "#CE93D8" },
   "ASP.NET": { bg: "#E3F2FD", text: "#0D47A1", border: "#1976D2" },
   WinForm: { bg: "#ECEFF1", text: "#37474F", border: "#78909C" },
-  Nooka筆記: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" }
+  Nooka筆記: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" },
+  封裝大局: { bg: "#FCE7F3", text: "#9D174D", border: "#F472B6" },
+  展機與展開: { bg: "#FFE9E3", text: "#C2410C", border: "#FDBA74" },
+  Alarm與解貨: { bg: "#FEE2E2", text: "#991B1B", border: "#F87171" },
+  參數與缺陷: { bg: "#E2E8F0", text: "#334155", border: "#94A3B8" },
+  SPC統計: { bg: "#E8EAF6", text: "#283593", border: "#5C6BC0" },
+  職場與工具: { bg: "#F5F0E8", text: "#78716C", border: "#D6CCC2" }
 }
 
 export type ReviewStage = "L" | "LL" | "LLL"
