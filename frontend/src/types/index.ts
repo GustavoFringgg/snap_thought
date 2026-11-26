@@ -26,20 +26,16 @@ export type NoteTag =
   | "ASP.NET"
   | "WinForm"
   | "Nooka筆記"
-  | "封裝大局"
-  | "展機與展開"
-  | "Alarm與解貨"
-  | "參數與缺陷"
-  | "SPC統計"
-  | "職場與工具"
+  | "捷運-國文"
+  | "捷運-英文"
+  | "捷運-運輸規劃"
+  | "捷運-數理邏輯"
 
 export const NOTE_TAGS: NoteTag[] = [
-  "封裝大局",
-  "展機與展開",
-  "Alarm與解貨",
-  "參數與缺陷",
-  "SPC統計",
-  "職場與工具",
+  "捷運-國文",
+  "捷運-英文",
+  "捷運-運輸規劃",
+  "捷運-數理邏輯",
   "TODO",
   "Others",
   "JS",
@@ -97,12 +93,18 @@ export const TAG_COLORS: Record<NoteTag, { bg: string; text: string; border: str
   "ASP.NET": { bg: "#E3F2FD", text: "#0D47A1", border: "#1976D2" },
   WinForm: { bg: "#ECEFF1", text: "#37474F", border: "#78909C" },
   Nooka筆記: { bg: "#EAF7F0", text: "#0B6E4F", border: "#2FAE73" },
-  封裝大局: { bg: "#FCE7F3", text: "#9D174D", border: "#F472B6" },
-  展機與展開: { bg: "#FFE9E3", text: "#C2410C", border: "#FDBA74" },
-  Alarm與解貨: { bg: "#FEE2E2", text: "#991B1B", border: "#F87171" },
-  參數與缺陷: { bg: "#E2E8F0", text: "#334155", border: "#94A3B8" },
-  SPC統計: { bg: "#E8EAF6", text: "#283593", border: "#5C6BC0" },
-  職場與工具: { bg: "#F5F0E8", text: "#78716C", border: "#D6CCC2" }
+  "捷運-國文": { bg: "#FDF2F8", text: "#831843", border: "#EC4899" },
+  "捷運-英文": { bg: "#EFF6FF", text: "#1E3A8A", border: "#3B82F6" },
+  "捷運-運輸規劃": { bg: "#F0FDFA", text: "#134E4A", border: "#14B8A6" },
+  "捷運-數理邏輯": { bg: "#FFFBEB", text: "#78350F", border: "#D97706" }
+}
+
+const FALLBACK_TAG_COLOR = { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" }
+
+// 舊筆記可能帶有已移除的標籤，查不到顏色時用灰色 fallback
+export function tagStyle(tag: string): string {
+  const c = TAG_COLORS[tag as NoteTag] ?? FALLBACK_TAG_COLOR
+  return `background:${c.bg};color:${c.text};border-color:${c.border}`
 }
 
 export type ReviewStage = "L" | "LL" | "LLL"

@@ -20,7 +20,7 @@
                   v-for="tag in note.tags"
                   :key="tag"
                   class="modal__tag"
-                  :style="`background:${TAG_COLORS[tag].bg};color:${TAG_COLORS[tag].text};border-color:${TAG_COLORS[tag].border}`"
+                  :style="tagStyle(tag)"
                   >{{ tag }}</span
                 >
               </span>
@@ -96,7 +96,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from "vue";
 import { renderMarkdown } from "../utils/markdown";
-import { TAG_COLORS } from "../types";
+import { tagStyle } from "../types";
 import type { Note } from "../types";
 
 const props = defineProps<{

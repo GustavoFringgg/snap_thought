@@ -16,7 +16,7 @@
             v-for="tag in note.tags"
             :key="tag"
             class="note-item__tag"
-            :style="`background:${TAG_COLORS[tag].bg};color:${TAG_COLORS[tag].text};border-color:${TAG_COLORS[tag].border}`"
+            :style="tagStyle(tag)"
             >{{ tag }}</span
           >
         </span>
@@ -101,7 +101,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { Note } from "../types";
-import { TAG_COLORS } from "../types";
+import { tagStyle } from "../types";
 
 const TRUNCATE_LIMIT = 20;
 

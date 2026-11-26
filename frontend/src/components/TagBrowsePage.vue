@@ -253,7 +253,7 @@ import { ref, computed, onMounted, watch, toRef } from "vue"
 import { renderMarkdown } from "../utils/markdown"
 import NoteModal from "./NoteModal.vue"
 import EditNoteModal from "./EditNoteModal.vue"
-import { NOTE_TAGS, TAG_COLORS } from "../types"
+import { NOTE_TAGS, TAG_COLORS, tagStyle } from "../types"
 import type { NoteTag, NoteWithContext, DayKey } from "../types"
 import { getTodayReviewStages, getReviewLabel, getTodayDateString } from "../utils/reviewSchedule"
 
@@ -439,13 +439,6 @@ function formatDate(iso: string): string {
 
 function truncate(text: string, max = 100): string {
   return text.length > max ? text.slice(0, max) + "…" : text
-}
-
-const FALLBACK_COLOR = { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" }
-
-function tagStyle(tag: string): string {
-  const c = TAG_COLORS[tag as NoteTag] ?? FALLBACK_COLOR
-  return `background:${c.bg};color:${c.text};border-color:${c.border}`
 }
 
 function openNote(note: NoteWithContext) {
