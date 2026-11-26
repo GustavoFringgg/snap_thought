@@ -254,16 +254,39 @@ function getISOWeek(date: Date): number {
 
 // ─── Year / Week state ─────────────────────────────────────────────
 const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+const YEAR_RANGE = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 // 最早可選週：2026/03/23 (Mon)
 const MIN_WEEK_DATE = new Date(2026, 2, 30);
 MIN_WEEK_DATE.setHours(0, 0, 0, 0);
 
-const selectedYear = ref(currentYear);
-const weeks = computed(() =>
-  generateWeeks(selectedYear.value).filter((w) => w.monday >= MIN_WEEK_DATE),
+// 有筆記的週，key 格式：`${year}-${isoWeek}`
+const weeksWithNotes = ref<Set<string>>(new Set());
+
+function containsToday(w: WeekRange): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const nextMonday = new Date(w.monday);
+  nextMonday.setDate(w.monday.getDate() + 7);
+  return today >= w.monday && today < nextMonday;
+}
+
+// 下拉選單只顯示：有筆記的週 + 今天所在的週（含週末，才能寫新筆記）
+function visibleWeeks(year: number): WeekRange[] {
+  return generateWeeks(year).filter(
+    (w) =>
+      w.monday >= MIN_WEEK_DATE &&
+      (containsToday(w) ||
+        weeksWithNotes.value.has(`${year}-${getISOWeek(w.monday)}`)),
+  );
+}
+
+const yearOptions = computed(() =>
+  YEAR_RANGE.filter((y) => y === currentYear || visibleWeeks(y).length > 0),
 );
+
+const selectedYear = ref(currentYear);
+const weeks = computed(() => visibleWeeks(selectedYear.value));
 const selectedWeekIndex = ref(findCurrentWeekIndex(weeks.value));
 
 const selectedWeek = computed(
@@ -372,6 +395,16 @@ async function fetchWeekNotes() {
   }
 }
 
+async function fetchWeeksWithNotes() {
+  try {
+    const res = await apiFetch(`/api/v1/notes/weeks`);
+    const data: { weeks: { year: number; isoWeek: number }[] } = await res.json();
+    weeksWithNotes.value = new Set(data.weeks.map((w) => `${w.year}-${w.isoWeek}`));
+  } catch (e) {
+    console.error("Failed to fetch weeks with notes:", e);
+  }
+}
+
 // ─── Handlers ──────────────────────────────────────────────────────
 function handleChangeDay(key: DayKey) {
   activeDay.value = key;
@@ -391,10 +424,7 @@ const canGoPrev = computed(() => {
   );
   if (currentPos > 0) return true;
   // 可跨年往前
-  const prevYearWeeks = generateWeeks(selectedYear.value - 1).filter(
-    (w) => w.monday >= MIN_WEEK_DATE,
-  );
-  return prevYearWeeks.length > 0;
+  return visibleWeeks(selectedYear.value - 1).length > 0;
 });
 
 const canGoNext = computed(() => {
@@ -403,8 +433,7 @@ const canGoNext = computed(() => {
   );
   if (currentPos < weeks.value.length - 1) return true;
   // 可跨年往後
-  const nextYear = selectedYear.value + 1;
-  return nextYear <= yearOptions[yearOptions.length - 1];
+  return visibleWeeks(selectedYear.value + 1).length > 0;
 });
 
 function goToPrevWeek() {
@@ -416,9 +445,7 @@ function goToPrevWeek() {
   } else {
     // 跨年往前
     const prevYear = selectedYear.value - 1;
-    const prevYearWeeks = generateWeeks(prevYear).filter(
-      (w) => w.monday >= MIN_WEEK_DATE,
-    );
+    const prevYearWeeks = visibleWeeks(prevYear);
     if (prevYearWeeks.length > 0) {
       selectedYear.value = prevYear;
       selectedWeekIndex.value = prevYearWeeks[prevYearWeeks.length - 1].index;
@@ -435,14 +462,10 @@ function goToNextWeek() {
   } else {
     // 跨年往後
     const nextYear = selectedYear.value + 1;
-    if (nextYear <= yearOptions[yearOptions.length - 1]) {
+    const nextYearWeeks = visibleWeeks(nextYear);
+    if (nextYearWeeks.length > 0) {
       selectedYear.value = nextYear;
-      const nextYearWeeks = generateWeeks(nextYear).filter(
-        (w) => w.monday >= MIN_WEEK_DATE,
-      );
-      if (nextYearWeeks.length > 0) {
-        selectedWeekIndex.value = nextYearWeeks[0].index;
-      }
+      selectedWeekIndex.value = nextYearWeeks[0].index;
     }
   }
 }
@@ -502,6 +525,13 @@ watch(currentView, (view) => {
   if (view === "week") fetchWeekNotes();
 });
 onMounted(fetchWeekNotes);
+onMounted(fetchWeeksWithNotes);
+// 未登入時 onMounted 的請求會 401，登入成功後再抓一次
+watch(authenticated, (ok) => {
+  if (!ok) return;
+  fetchWeekNotes();
+  fetchWeeksWithNotes();
+});
 </script>
 
 <style>

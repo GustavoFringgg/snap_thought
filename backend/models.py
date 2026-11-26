@@ -54,5 +54,14 @@ class TagNotesResponse(BaseModel):
     notes: List[NoteWithContext]
 
 
+class WeekRef(BaseModel):
+    year: int
+    isoWeek: int
+
+
+class WeeksWithNotesResponse(BaseModel):
+    weeks: List[WeekRef]
+
+
 class HealthResponse(BaseModel):
     status: str

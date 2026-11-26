@@ -3,7 +3,17 @@ from bson import ObjectId
 from datetime import datetime, timezone
 
 from database import notes_collection
-from models import NoteCreate, NoteUpdate, NoteResponse, WeekNotesResponse, NoteWithContext, TagNotesResponse, ReviewStageUpdate
+from models import (
+    NoteCreate,
+    NoteUpdate,
+    NoteResponse,
+    WeekNotesResponse,
+    NoteWithContext,
+    TagNotesResponse,
+    ReviewStageUpdate,
+    WeekRef,
+    WeeksWithNotesResponse,
+)
 from auth import verify_token
 from typing import Optional
 
@@ -126,6 +136,20 @@ async def update_review_stage(note_id: str, body: ReviewStageUpdate):
         return_document=True,
     )
     return doc_to_context(result)
+
+
+@router.get("/weeks", response_model=WeeksWithNotesResponse)
+async def get_weeks_with_notes():
+    """回傳所有至少有一則筆記的 (year, isoWeek)，供前端週次下拉選單過濾。"""
+    pipeline = [
+        {"$group": {"_id": {"year": "$year", "isoWeek": "$isoWeek"}}},
+        {"$sort": {"_id.year": 1, "_id.isoWeek": 1}},
+    ]
+    weeks = [
+        WeekRef(year=doc["_id"]["year"], isoWeek=doc["_id"]["isoWeek"])
+        async for doc in notes_collection.aggregate(pipeline)
+    ]
+    return WeeksWithNotesResponse(weeks=weeks)
 
 
 @router.get("/by-tag", response_model=TagNotesResponse)
